@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Cultivation / Prototype</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+</head>
+<body class="has-no-image">
+
+    <div class="status-bar">
+        <span>FILE <span id="hud-orig">—</span></span>
+        <span>OUTPUT <span id="hud-size">—</span></span>
+        <span>SAVED <span id="hud-saved" class="highlight">—</span></span>
+        <span>POWER <span id="hud-power" class="highlight">—</span></span>
+    </div>
+
+    <main class="ascii-workspace">
+
+        <div class="preview-column">
+            <section class="canvas-container">
+                <div class="canvas-wrapper" id="single-view">
+                    <canvas id="main-canvas"></canvas>
+                    <div class="canvas-splitter" style="left: 50%;"></div>
+
+                    <div class="empty-state" id="empty-state">
+                        <div class="empty-state-inner">
+                            <div class="section-title">[ IMAGE INPUT ]</div>
+                            <div class="empty-state-actions">
+                                <label class="btn-ascii" for="image-upload" id="btn-empty-import">[ IMPORT IMAGE ]</label>
+                                <button type="button" class="btn-ascii" id="btn-webcam-empty">[ USE WEBCAM ]</button>
+                            </div>
+                            <p class="empty-state-hint">or drop an image here</p>
+                            <p class="empty-state-error" id="empty-state-error" hidden></p>
+                        </div>
+                    </div>
+
+                    <div class="webcam-view" id="webcam-view" hidden>
+                        <div class="webcam-video-frame">
+                            <video id="webcam-preview" autoplay playsinline muted></video>
+                        </div>
+                        <div class="webcam-controls">
+                            <button type="button" class="btn-ascii" id="btn-webcam-capture" disabled>[ CAPTURE FRAME ]</button>
+                            <button type="button" class="btn-ascii" id="btn-webcam-cancel">[ CANCEL ]</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="drop-message" id="drop-message" hidden></div>
+
+                <div id="grid-view" style="display: none;"></div>
+            </section>
+
+            <div class="view-options">
+                <button class="btn-ascii requires-image" id="btn-grid" disabled>[ GRID ]</button>
+                <button class="btn-ascii requires-image" id="btn-split" disabled>[ SPLIT ]</button>
+                <button class="btn-ascii requires-image" id="btn-ink" disabled>[ INK SAVER ]</button>
+                <button class="btn-ascii requires-image" id="btn-orig-color" disabled>[ ORIGINAL COLOUR ]</button>
+            </div>
+        </div>
+
+        <aside class="sidebar-right">
+
+            <div class="panel-group panel-input">
+                <div class="section-title">[ IMAGE INPUT ]</div>
+
+                <div class="input-actions">
+                    <label class="btn-ascii btn-import requires-image" for="image-upload" aria-disabled="true">
+                        [ ADD IMAGE ]
+                    </label>
+                    <input type="file" id="image-upload" accept="image/*" multiple style="display:none;">
+
+                    <button type="button" class="btn-ascii requires-image" id="btn-webcam-sidebar" disabled>[ USE WEBCAM ]</button>
+                </div>
+
+                <div id="file-list"></div>
+            </div>
+
+            <div class="panel-group">
+                <div class="section-title">[ IMAGE REDUCTION ]</div>
+
+                <div class="control-item">
+                    <div class="control-label">
+                        <span>DOWNSAMPLE</span>
+                        <span class="value-display">100%</span>
+                    </div>
+                    <input type="range" min="10" max="100" value="100" class="ascii-slider requires-image" disabled>
+                </div>
+
+                <div class="control-item">
+                    <div class="control-label">
+                        <span>BIT_DEPTH</span>
+                        <span class="value-display">1-BIT</span>
+                    </div>
+                    <input type="range" min="1" max="8" value="1" class="ascii-slider requires-image" disabled>
+                </div>
+
+                <div class="control-item">
+                    <div class="control-label">
+                        <span>DITHER_LVL</span>
+                        <span class="value-display">75%</span>
+                    </div>
+                    <input type="range" min="0" max="100" value="75" class="ascii-slider requires-image" disabled>
+                </div>
+            </div>
+
+            <div class="panel-group">
+                <div class="section-title">[ DITHERING METHOD ]</div>
+
+                <div class="control-item">
+                    <div class="control-label"><span>ALGORITHM</span></div>
+                    <select class="ascii-select requires-image" disabled>
+                        <option>&gt; FLOYD_STEINBERG</option>
+                        <option>&gt; BAYER_MATRIX</option>
+                        <option>&gt; RANDOM_NOISE</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="panel-group panel-group-last">
+                <div class="section-title">[ PRESETS ]</div>
+                <div class="presets-grid">
+                    <button class="btn-ascii requires-image active" disabled>[ GAMEBOY ]</button>
+                    <button class="btn-ascii requires-image" disabled>[ E-INK ]</button>
+                    <button class="btn-ascii requires-image" disabled>[ OLED ]</button>
+                    <button class="btn-ascii requires-image" disabled>[ CRT TV ]</button>
+                </div>
+            </div>
+
+        </aside>
+    </main>
+
+    <footer class="ascii-footer">
+        <div class="footer-actions">
+            <button class="btn-ascii requires-image" id="btn-copy-css" disabled>[ COPY CSS ]</button>
+            <button class="btn-ascii requires-image" id="btn-print-thermal" disabled>[ PRINT ]</button>
+            <button class="btn-ascii highlight-bg requires-image" id="btn-download" disabled>[ EXPORT WEBP ]</button>
+        </div>
+    </footer>
+
+</body>
+</html>

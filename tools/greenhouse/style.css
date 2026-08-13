@@ -1,0 +1,727 @@
+/* 1. Heading typeface: Departure Mono */
+@font-face {
+    font-family: 'DepartureMono';
+    src: url('./fonts/DepartureMono-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* 2. Body typeface: National Park Medium */
+@font-face {
+    font-family: 'NationalPark';
+    src: url('./fonts/NationalPark-VariableFont_wght.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+:root {
+    --paper: #ffffff;
+    --ink: #111111;
+    --border: #111111;
+    --muted: #555555;
+    --rule: 1px dashed var(--muted);
+    --rule-solid: 1px solid var(--border);
+    --preview-bg: #0a0a0a;
+    --preview-fg: #e6e6e6;
+    --gap: 20px;
+    /* Shared corner radius for every button-like control (soft rounded
+       rectangles, not pill/capsule shapes), matching the rest of the
+       Resilient Garden interface. */
+    --control-radius: 0.75rem;
+}
+
+body {
+    background-color: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    font-family: 'NationalPark', "Courier New", Courier, monospace;
+}
+
+.section-title,
+.btn-ascii,
+.ascii-select {
+    font-family: 'DepartureMono', "Courier New", Courier, monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.status-bar,
+.value-display {
+    font-family: 'DepartureMono', "Courier New", Courier, monospace;
+}
+
+.highlight { font-weight: 700; }
+
+/* ==========================================
+   1. Status line (first row of the tool)
+   ========================================== */
+.status-bar {
+    flex: none;
+    border-bottom: var(--rule-solid);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 20px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+
+/* ==========================================
+   2. Workspace layout (mobile-first: single column)
+   ========================================== */
+.ascii-workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 0;
+}
+
+.preview-column {
+    display: flex;
+    flex-direction: column;
+    flex: none;
+}
+
+/* Mobile stacking order: Image Input first, then preview, then the
+   remaining controls, footer last. Achieved by letting sidebar-right's
+   panel-groups join ascii-workspace's own flex order (display:contents),
+   without touching DOM order -- so script.js's positional NodeList
+   lookups (sliders, value-displays, presets) are unaffected. */
+.sidebar-right {
+    display: contents;
+}
+
+.panel-input { order: -1; }
+.preview-column { order: 0; }
+.panel-group:not(.panel-input) { order: 1; }
+
+.section-title {
+    font-size: 11px;
+    color: var(--ink);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+}
+
+/* ==========================================
+   3. Preview
+   ========================================== */
+.canvas-container {
+    flex: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    border: var(--rule-solid);
+    margin: 16px 16px 0 16px;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(255,255,255,0.02),
+            rgba(255,255,255,0.02) 2px,
+            transparent 2px,
+            transparent 4px
+        ),
+        var(--preview-bg);
+    min-height: 40vh;
+}
+
+.canvas-wrapper {
+    position: relative;
+    height: 60vh;
+    max-width: 100%;
+    background: var(--preview-bg);
+}
+
+#main-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+}
+
+/* Grid mode also keeps the dark, pixelated preview aesthetic */
+.grid-canvas {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--muted);
+    background-color: var(--preview-bg);
+    image-rendering: pixelated;
+}
+
+#grid-view {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    padding: 16px;
+    align-content: start;
+}
+
+/* Monochrome before/after split guide */
+.canvas-splitter {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--preview-fg);
+    cursor: ew-resize;
+    display: none;
+}
+.canvas-splitter::after {
+    content: "<|>";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--preview-bg);
+    color: var(--preview-fg);
+    padding: 3px 5px;
+    font-size: 11px;
+    border: 1px solid var(--preview-fg);
+    font-family: 'DepartureMono', "Courier New", Courier, monospace;
+    white-space: nowrap;
+}
+
+/* ==========================================
+   3b. Empty state (shown inside the preview
+   before any image has been loaded or captured)
+   ========================================== */
+.empty-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 1;
+}
+
+.empty-state[hidden] { display: none; }
+
+.empty-state-inner {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px dashed var(--ink);
+    padding: 28px 32px;
+    max-width: 340px;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.empty-state-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    width: 100%;
+}
+
+.empty-state-actions .btn-ascii {
+    flex: 1 1 auto;
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    text-align: center;
+}
+
+.empty-state-hint {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+}
+
+.empty-state-error {
+    font-size: 11px;
+    color: var(--ink);
+    border-top: var(--rule);
+    padding-top: 10px;
+    width: 100%;
+}
+
+.empty-state-error[hidden] { display: none; }
+
+/* Drag-and-drop feedback: applied to .canvas-container while a file is
+   being dragged over the preview area. */
+.canvas-container.drag-active .canvas-wrapper {
+    outline: 1px dashed var(--ink);
+    outline-offset: -6px;
+}
+
+.drop-message {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    z-index: 2;
+}
+
+.drop-message[hidden] { display: none; }
+
+/* ==========================================
+   3c. Webcam live view
+   ========================================== */
+.webcam-view {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--preview-bg);
+    z-index: 1;
+}
+
+.webcam-view[hidden] { display: none; }
+
+.webcam-video-frame {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#webcam-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: var(--preview-bg);
+}
+
+.webcam-controls {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.webcam-controls .btn-ascii {
+    border: 1px solid var(--preview-fg);
+    color: var(--preview-fg);
+    padding: 8px 14px;
+}
+.webcam-controls .btn-ascii:hover,
+.webcam-controls .btn-ascii:focus-visible {
+    background: var(--preview-fg);
+    color: var(--preview-bg);
+}
+.webcam-controls .btn-ascii:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.webcam-controls .btn-ascii:disabled:hover {
+    background: transparent;
+    color: var(--preview-fg);
+}
+
+/* ==========================================
+   3d. Shared enable/disable state
+   One shared state drives every control that needs an image to be
+   meaningful: body.has-no-image (no image in the library yet) and
+   body.webcam-active (a live camera stream is showing, regardless of
+   whether images already exist). Native `disabled` is set on real form
+   controls by script.js; this rule supplies the visual treatment for
+   those plus the sidebar's ADD IMAGE <label>, which cannot take a
+   native `disabled` attribute (aria-disabled + pointer-events instead).
+   ========================================== */
+body.has-no-image .requires-image,
+body.webcam-active .requires-image {
+    opacity: 0.35;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+body.webcam-active #file-list,
+body.has-no-image #file-list {
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+/* ==========================================
+   4. View-options row (below preview)
+   ========================================== */
+.view-options {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 16px;
+    border-bottom: var(--rule);
+}
+
+.view-options .btn-ascii {
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+}
+
+/* ==========================================
+   5. Buttons
+   ========================================== */
+/* Every button-like control in the Greenhouse -- native <button>s,
+   <label>s styled as buttons (including both #image-upload triggers),
+   and the dynamically generated file-name-btn/btn-delete rows -- already
+   shares this one class, so a single shared radius here is enough to
+   cover every case listed in the corner-rounding brief without
+   repeating the declaration per control. */
+.btn-ascii {
+    background-color: transparent;
+    color: var(--ink);
+    border: none;
+    border-radius: var(--control-radius);
+    padding: 6px 0;
+    font-size: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.btn-ascii:hover,
+.btn-ascii:focus-visible {
+    background-color: var(--ink);
+    color: var(--paper);
+}
+
+.btn-ascii:focus-visible,
+button:focus-visible,
+label[for="image-upload"]:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+/* Selected / active state: never colour alone -- invert fill + a
+   heavier border so the state also reads by shape/weight. */
+.btn-ascii.active,
+.btn-ascii.highlight-bg {
+    background-color: var(--ink);
+    color: var(--paper);
+    border: 1px solid var(--ink);
+    font-weight: 700;
+}
+
+.view-options .btn-ascii.highlight-bg,
+.presets-grid .btn-ascii.active {
+    border-width: 2px;
+}
+
+.input-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.btn-import {
+    flex: 1 1 auto;
+    display: block;
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: center;
+}
+
+.input-actions #btn-webcam-sidebar {
+    flex: 1 1 auto;
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: center;
+}
+
+/* ==========================================
+   6. Presets
+   ========================================== */
+.presets-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.presets-grid .btn-ascii {
+    border: 1px solid var(--muted);
+    text-align: center;
+    padding: 8px 4px;
+}
+
+/* ==========================================
+   7. Parameters
+   ========================================== */
+.panel-group {
+    padding: 0 20px 20px 20px;
+    border-bottom: var(--rule);
+}
+
+.panel-input {
+    padding-top: 4px;
+}
+
+.panel-group-last {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.control-item {
+    margin-bottom: 18px;
+}
+
+.control-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+}
+
+/* ==========================================
+   8. Sliders
+   ========================================== */
+.ascii-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    background: transparent;
+    cursor: pointer;
+    margin: 10px 0;
+    display: block;
+}
+
+.ascii-slider:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+}
+
+/* Track */
+.ascii-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 2px;
+    background: var(--ink);
+    border: none;
+    border-radius: 0;
+}
+.ascii-slider::-moz-range-track {
+    width: 100%;
+    height: 2px;
+    background: var(--ink);
+    border: none;
+    border-radius: 0;
+}
+
+/* Thumb: small rectangular block, no accent colour */
+.ascii-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 14px;
+    width: 8px;
+    background: var(--ink);
+    border: none;
+    border-radius: 0;
+    margin-top: -6px;
+}
+.ascii-slider::-moz-range-thumb {
+    height: 14px;
+    width: 8px;
+    background: var(--ink);
+    border: none;
+    border-radius: 0;
+}
+
+/* ==========================================
+   9. Select
+   ========================================== */
+.ascii-select {
+    width: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    padding: 6px 8px;
+    font-size: 12px;
+    border-radius: 0;
+    cursor: pointer;
+}
+.ascii-select:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+}
+
+/* ==========================================
+   10. File list (multi-image import)
+   ========================================== */
+#file-list {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    opacity: 0.55;
+    transition: opacity 0.15s;
+}
+
+.file-item:hover,
+.file-item.active {
+    opacity: 1;
+}
+
+.file-item .btn-ascii.file-name-btn {
+    flex-grow: 1;
+    text-align: left;
+    margin: 0;
+    border: none;
+    background: transparent;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 3px 4px;
+}
+
+.file-item.active .btn-ascii.file-name-btn {
+    background-color: var(--ink);
+    color: var(--paper);
+}
+
+.file-item .btn-delete {
+    flex-grow: 0;
+    color: var(--muted);
+    padding: 2px 5px;
+    border: 1px solid transparent;
+    /* Small enough that the shared --control-radius would read as a
+       circle rather than a rounded rectangle -- scaled down
+       proportionally instead of dropping to a hard corner. */
+    border-radius: calc(var(--control-radius) / 2);
+}
+
+.file-item .btn-delete:hover {
+    border-color: var(--ink);
+    background-color: var(--paper);
+    color: var(--ink);
+}
+
+/* ==========================================
+   11. Zoom lens
+   ========================================== */
+#zoom-lens {
+    position: fixed;
+    width: 160px;
+    height: 160px;
+    border: 2px solid var(--ink);
+    background-color: var(--preview-bg);
+    pointer-events: none;
+    display: none;
+    z-index: 9999;
+    image-rendering: pixelated;
+}
+
+/* ==========================================
+   12. Footer
+   ========================================== */
+.ascii-footer {
+    flex: none;
+    border-top: var(--rule-solid);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 14px 20px;
+}
+
+.footer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.footer-actions .btn-ascii {
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+}
+
+/* ==========================================
+   13. Desktop layout
+   ========================================== */
+@media (min-width: 900px) {
+    body {
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .ascii-workspace {
+        flex-direction: row;
+        gap: 0;
+        overflow: hidden;
+    }
+
+    .preview-column {
+        flex: 1 1 72%;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .canvas-container {
+        flex: 1;
+        min-height: 0;
+    }
+
+    .canvas-wrapper {
+        height: 100%;
+        max-height: 100%;
+    }
+
+    /* Restore sidebar-right as a real box: on mobile it is display:contents
+       so its panel-groups can join the page's single top-level flex order
+       (see rule above); on desktop it becomes the right control column
+       again, with its own padding/gap supplying the spacing that
+       .panel-group's mobile-only horizontal padding no longer needs to. */
+    .sidebar-right {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        flex: 0 0 300px;
+        width: 300px;
+        border-left: var(--rule-solid);
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    .panel-group {
+        padding: 0 0 20px 0;
+    }
+
+    .panel-input {
+        padding-top: 0;
+    }
+}

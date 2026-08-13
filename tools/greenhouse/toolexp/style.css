@@ -1,0 +1,425 @@
+/* 1. 載入標題字體：Departure Mono */
+@font-face {
+    font-family: 'DepartureMono';
+    src: url('./fonts/DepartureMono-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap; 
+}
+
+/* 2. 載入內文字體：National Park Medium */
+@font-face {
+    font-family: 'NationalPark';
+    src: url('./fonts/national_park_medium.woff2') format('woff2');
+    font-weight: 500; 
+    font-style: normal;
+    font-display: swap;
+}
+
+/* 3. 全域基礎歸零 (拿掉強制字體) */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+/* 4. 內文預設設定：使用 National Park */
+body {
+    background-color: #000000; /* 純黑 (OLED 0耗電) */
+    color: #cccccc; /* 復古灰白文字 */
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    
+    /* 讓整個網頁預設使用 NationalPark */
+    font-family: 'NationalPark', "Courier New", Courier, monospace; 
+}
+
+/* 5. 標題與按鈕設定：使用 Departure Mono */
+/* 這裡精準對應你 HTML 裡的 class */
+.logo, 
+.section-title, 
+.btn-ascii, 
+.ascii-select {
+    font-family: 'DepartureMono', "Courier New", Courier, monospace;
+    text-transform: uppercase; /* 強制大寫，保留強烈的終端機風格 */
+    letter-spacing: 1px; /* 稍微拉開字距，增加標題呼吸空間 */
+}
+
+/* 6. (選擇性) 確保儀表板數字的等寬對齊 */
+/* 雖然預設用了 NationalPark，但儀表板數字跳動時用純等寬會比較穩 */
+.hud-display span, 
+.value-display {
+    font-family: 'DepartureMono', "Courier New", Courier, monospace;
+}
+
+
+
+
+/* 核心配色定義 */
+.highlight { color: #00ff00; } /* 經典終端機螢光綠 */
+.highlight-bg { background-color: #cccccc; color: #000000; font-weight: bold; }
+
+/* 1. 頂部狀態欄 */
+.ascii-header {
+    height: 40px;
+    border-bottom: 1px dashed #555555;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+.logo {
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.hud-display {
+    display: flex;
+    gap: 16px;
+}
+
+/* 2. 工作區佈局 (使用虛線或實線分隔) */
+.ascii-workspace {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+aside {
+    width: 260px;
+    border-right: 1px dashed #555555;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow-y: auto;
+}
+
+.sidebar-right {
+    border-right: none;
+    border-left: 1px dashed #555555;
+    width: 280px;
+}
+
+.section-title {
+    font-size: 12px;
+    color: #ffffff;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+}
+
+/* 3. 中央畫布區 */
+.canvas-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    position: relative;
+    overflow: hidden; /* 防止圖片過大破壞版面 */
+    background: repeating-linear-gradient(
+        0deg,
+        #000000,
+        #000000 2px,
+        #0a0a0a 2px,
+        #0a0a0a 4px
+    );
+}
+
+.canvas-wrapper {
+    position: relative;
+    /* 取消 fit-content，我們直接給定高度，寬度交給 JS 算比例 */
+    height: 70vh; 
+    max-width: calc(100vw - 600px); /* 防呆：避免橫幅圖片蓋掉左右選單 */
+    border: 1px solid #777777;
+    background: #000;
+}
+
+#main-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* ✨ 超關鍵：讓縮小的畫素變成銳利的方塊，展現真正的硬體限制美學 */
+    image-rendering: pixelated; 
+}
+
+/* 畫布四角的 ASCII 十字準心裝飾 (維持不變) */
+.corner-tl, .corner-tr, .corner-bl, .corner-br {
+    position: absolute;
+    color: #fff;
+    font-size: 16px;
+    line-height: 1;
+}
+.corner-tl { top: -9px; left: -5px; }
+.corner-tr { top: -9px; right: -5px; }
+.corner-bl { bottom: -8px; left: -5px; }
+.corner-br { bottom: -8px; right: -5px; }
+
+
+/* ==========================================
+   順便幫你的網格模式也加上像素化風格
+   ========================================== */
+.grid-canvas {
+    width: 100%;
+    height: auto;
+    border: 1px solid #444;
+    background-color: #000;
+    box-shadow: 2px 2px 0px #222;
+    image-rendering: pixelated; /* ✨ 網格模式也開啟方塊感 */
+}
+
+
+
+/* ASCII 風格的分割線 (Before/After) */
+.canvas-splitter {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: #00ff00;
+    cursor: ew-resize;
+    display: none;
+}
+.canvas-splitter::after {
+    content: "<|>";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #000;
+    color: #00ff00;
+    padding: 4px;
+    font-size: 12px;
+    border: 1px solid #00ff00;
+}
+
+
+.btn-ascii {
+    background-color: transparent;
+    color: #cccccc;
+    border: none;
+    padding: 6px 0;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: color 0.1s, background-color 0.1s;
+}
+
+.btn-ascii:hover {
+    background-color: #cccccc;
+    color: #000000;
+}
+
+.btn-ascii.active {
+    background-color: #333333;
+    color: #ffffff;
+}
+
+.btn-ascii.highlight-bg:hover {
+    background-color: #ffffff;
+}
+
+.presets-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.presets-grid .btn-ascii {
+    border: 1px solid #444;
+    text-align: center;
+    padding: 8px 4px;
+}
+
+/* 5. 參數控制項 */
+.panel-group {
+    border-bottom: 1px dashed #444;
+    padding-bottom: 24px;
+}
+
+.control-item {
+    margin-bottom: 20px;
+}
+
+/* ==========================================
+   網格模式 (Grid View / Contact Sheet)
+   ========================================== */
+#grid-view {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 15px;
+    padding: 20px;
+    align-content: start;
+}
+
+/* 網格內產生的畫布 */
+.grid-canvas {
+    width: 100%;
+    height: auto;
+    border: 1px solid #444;
+    background-color: #000;
+    box-shadow: 2px 2px 0px #222; /* 復古終端機陰影 */
+}
+
+/* ==========================================
+   微觀像素檢視器 (Pixel Inspector / Zoom Lens)
+   ========================================== */
+#zoom-lens {
+    position: fixed;
+    width: 160px;
+    height: 160px;
+    border: 2px solid #cccccc;
+    background-color: #000;
+
+    pointer-events: none; /* 確保它不會阻擋滑鼠點擊 */
+    display: none;
+    z-index: 9999;
+    image-rendering: pixelated; /* 確保放大後是銳利的方塊 */
+    border-radius: 4px; /* 稍微導角比較好看 */
+}
+/* ==========================================
+   純文字多檔案列表 (Terminal Text-Only Gallery)
+   ========================================== */
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    opacity: 0.6; /* 預設暗態 */
+    transition: opacity 0.2s;
+}
+
+.file-item:hover, .file-item.active {
+    opacity: 1;
+}
+
+/* 檔名按鈕 */
+.file-item .btn-ascii.file-name-btn {
+    flex-grow: 1;
+    text-align: left;
+    margin: 0; 
+    border: none;
+    background: transparent;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 刪除按鈕 [-] */
+.file-item .btn-delete {
+    flex-grow: 0;
+    color: #888888;
+    padding: 2px 4px;
+    margin-left: auto; /* 推到最右邊 */
+}
+
+.file-item .btn-delete:hover {
+    background-color: #ff3333; /* 懸停時變紅 */
+    color: #ffffff;
+}
+
+/* 選中時的檔名反白 */
+.file-item.active .btn-ascii.file-name-btn {
+    background-color: #cccccc;
+    color: #000000;
+}
+
+/* ==========================================
+   控制項標題排版 (讓文字與數值漂亮對齊)
+   ========================================== */
+.control-item {
+    margin-bottom: 20px;
+}
+
+.control-label {
+    display: flex;
+    justify-content: space-between; /* 標題在左，數據在右 */
+    font-size: 12px;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+}
+
+/* ==========================================
+   .ascii-slider 核心控制樣式
+   ========================================== */
+
+/* 1. 清除瀏覽器預設外觀 */
+.ascii-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    background: transparent; /* 隱藏原生軌道背景 */
+    cursor: pointer;
+    margin: 8px 0;
+    display: block;
+}
+
+.ascii-slider:focus {
+    outline: none;
+}
+
+/* ==========================================
+   Chrome, Safari, Edge 專用偽元素
+   ========================================== */
+
+/* 軌道 (Track) */
+.ascii-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;              /* 軌道粗細 */
+    background: #222222;      /* 深灰暗色軌道底 */
+    border: 1px solid #444444; /* 銳利邊框 */
+    border-radius: 0px;       /* 堅持 Permacomputing 的無圓角美學 */
+}
+
+/* 滑塊 (Thumb) - 做成經典的垂直方塊鍵 */
+.ascii-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 16px;             /* 滑塊高度 */
+    width: 8px;               /* 滑塊寬度：垂直長方形 */
+    background: #ffffff;      /* 核心螢光綠 */
+    border: none;
+    border-radius: 0px;       /* 絕對直角 */
+    margin-top: -7px;         /* 垂直置中校正：(軌道高4/2) - (滑塊高16/2) */
+    transition: background-color 0.1s;
+}
+
+
+/* ==========================================
+   Firefox 專用偽元素
+   ========================================== */
+
+/* 軌道 (Track) */
+.ascii-slider::-moz-range-track {
+    width: 100%;
+    height: 4px;
+    background: #222222;
+    border: 1px solid #444444;
+    border-radius: 0px;
+}
+
+/* 滑塊 (Thumb) */
+.ascii-slider::-moz-range-thumb {
+    height: 16px;
+    width: 8px;
+    background: #00ff00;
+    border: none;
+    border-radius: 0px;
+    transition: background-color 0.1s;
+}
+
+/* 滑塊互動狀態 */
+.ascii-slider:hover::-moz-range-thumb,
+.ascii-slider:active::-moz-range-thumb {
+    background: #ffffff;
+}

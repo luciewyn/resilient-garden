@@ -1,0 +1,2971 @@
+/* The Resilient Garden — shared stylesheet. Monochrome, jgs7 pixel font, no animation. */
+
+/* jgs7 — self-hosted, SIL Open Font License (see assets/jgs-main/LICENSE).
+   No external font request; served from this same origin. */
+@font-face {
+  font-family: "jgs7";
+  src: url("../jgs-main/fonts/webfonts/jgs7.woff2") format("woff2"),
+    url("../jgs-main/fonts/webfonts/jgs7.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* jgs5 -- self-hosted, same license/origin as jgs7 above. Scoped to the
+   eight primary Garden Map labels only (assets/js/ascii-map-interaction.js
+   wraps them in .map-primary-label); every other map character stays in
+   jgs7 via --mono. font-display: block (not swap, unlike jgs7) so those
+   eight labels never briefly flash in the wrong font while jgs5 loads --
+   they're a deliberate typographic distinction, not ordinary body text. */
+@font-face {
+  font-family: "jgs5";
+  src: url("../jgs-main/fonts/webfonts/jgs5.woff2") format("woff2"),
+    url("../jgs-main/fonts/webfonts/jgs5.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+:root {
+  --fg: #111;
+  --bg: #fff;
+  --border: #111;
+  --muted: #555;
+  --font: "jgs7", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: "jgs7", ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  --content-width: 42rem;
+  /* Narrower than the previous 58rem cap on purpose: at most real
+     desktop widths (>~987px, i.e. wherever 94vw alone would already
+     exceed 58rem) the old min(94vw, 58rem) formula was permanently
+     pinned to that flat 928px regardless of how wide the browser
+     actually was, leaving comparatively little Garden Map visible on
+     either side. 50rem (800px) sits clearly between that old cap and
+     the much narrower 700px cap the static content panels (Energy,
+     Seed, etc.) use -- still comfortably wide enough for the ASCII
+     logo and slide copy, but visibly narrower than before. */
+  --entrance-width: 50rem;
+  /* Shifts the whole Entrance composition (logo, slide text, dots,
+     buttons -- see .entrance-body) down from the Entrance window's own
+     vertical centre, without moving or resizing the window itself.
+     Reduced for short viewports below, so the final button never gets
+     pushed toward/past the bottom edge on a short screen. */
+  --entrance-content-offset-y: clamp(1.5rem, 4vh, 3.5rem);
+  /* Shifts just the progress dots + NEXT/ENTER THE GARDEN button (see
+     .entrance-navigation) up from where .entrance-body's own flex gap
+     would otherwise place them, independently of the whole
+     composition's own downward --entrance-content-offset-y above --
+     the two aren't the same knob: this one only tightens the gap below
+     the slide text, it never moves the logo or slide text themselves.
+     Reduced for short viewports below, same reasoning as
+     --entrance-content-offset-y. */
+  --entrance-navigation-offset-y: clamp(1rem, 2.5vh, 2rem);
+  /* Shared right-hand guide: ABOUT, BASKET (0), and Garden Status's
+     border all align to this same edge. */
+  --page-gutter: clamp(1.25rem, 2.5vw, 3rem);
+  /* Homepage only: the site header's fixed height, and the matching
+     offset that keeps page content from starting underneath it. */
+  --header-height: 3.5rem;
+  /* Homepage only: vertical clearance between the fixed header's bottom
+     edge and fixed-position overlay panels (Map Index) below it. */
+  --map-interface-gap: 1.25rem;
+
+  /* Homepage stacking order, back to front: the ASCII Garden Map itself,
+     its clickable hotspots (Greenhouse/Energy/Seed triggers), Map Index
+     and Garden Status above those, ENERGY/SEED/future static content
+     panels above Map Index, the fixed site header above everything
+     static, and the Greenhouse tool's modal dialog above all of it when
+     open. Every z-index in the file should reference one of these
+     rather than an unlabeled number, so the relative order stays
+     legible and adjustable in one place. */
+  --z-garden-map: 0;
+  --z-map-destinations: 10;
+  --z-map-interface: 30;
+  --z-content-panel: 50;
+  --z-site-header: 100;
+  --z-greenhouse-modal: 200;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #eee;
+    --bg: #111;
+    --border: #eee;
+    --muted: #aaa;
+  }
+}
+
+/* Short-viewport safety: on a short window the 4vh-driven clamp() above
+   can still push the Entrance composition (see .entrance-body) far
+   enough down that the final button crowds the bottom edge. A flat 1rem
+   here keeps it comfortably clear without clipping or relying on the
+   Entrance's internal scrolling to compensate. */
+@media (max-height: 650px) {
+  :root {
+    --entrance-content-offset-y: 1rem;
+    --entrance-navigation-offset-y: 0.6rem;
+  }
+}
+
+/* Between ~530px and 540px the nav wraps to a second line (title alone,
+   then all three nav links together) and no longer fits inside the
+   compact 3.5rem default -- measured directly (needs ~57px of natural
+   content height at this tier, against the header's stricter fixed
+   height now that padding-block is 0). Must appear before the
+   max-width: 350px query below so that query's stricter value still
+   wins at narrower widths. */
+@media (max-width: 540px) {
+  :root {
+    --header-height: 4rem;
+  }
+}
+
+/* Below ~405px the ASCII Home logo (.ascii-home-logo) itself no longer
+   fits beside the nav on the same row (the nav also wraps further here:
+   title/logo row, then nav links, then About on its own row) and no
+   longer fits the two-line tier's height either -- measured directly
+   (jumps from ~62px to ~99px of natural content height right at this
+   boundary, confirmed by testing every 10px from 540px down to 280px,
+   not assumed), not the old ~345px/~119px threshold this replaces,
+   which was tuned for the plain-text .site-title this logo replaced --
+   the wider ASCII artwork changes where the wrap actually happens.
+   Overriding the one shared variable here keeps the fixed header, the
+   body offset, and the Entrance's top position all in sync
+   automatically, since all three read from it. */
+@media (max-width: 405px) {
+  :root {
+    --header-height: 6.5rem;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--fg);
+  background: var(--bg);
+  line-height: 1.5;
+}
+
+main {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+
+/* Homepage main is unconstrained; the entrance and map set their own widths */
+main.home-main {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Homepage shell: main scrolls naturally; the header is fixed (see
+   "Fixed header, homepage only" below), so this is the one place that
+   reserves --header-height of space for it — nothing else in the layout
+   reserves this space, since fixed positioning takes the header out of
+   normal flow entirely. */
+body.ascii-map-page {
+  padding-top: var(--header-height);
+}
+
+h1, h2 {
+  line-height: 1.2;
+}
+
+a {
+  color: var(--fg);
+}
+
+a:not(:hover) {
+  text-decoration-thickness: 1px;
+}
+
+cite {
+  font-style: italic;
+}
+
+/* Header / navigation — permanent, wraps on small screens, no JS */
+
+.site-header {
+  border-bottom: 1px dashed var(--border);
+  padding-block: 1rem;
+  padding-inline: var(--page-gutter);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  align-items: baseline;
+}
+
+/* Fixed header, homepage only: the ASCII map scrolls underneath it,
+   everywhere else the header stays in normal document flow unchanged.
+   Scoped to body.ascii-map-page rather than applied to .site-header
+   globally, since .site-header is shared by every page on the site and
+   this request is specifically about the homepage.
+
+   padding-block and align-items are overridden here (not on the base
+   .site-header rule) because only the fixed homepage header needs to
+   fit its content into a strict `height` instead of letting padding
+   determine height naturally -- other pages keep the base rule's
+   padding-block: 1rem / align-items: baseline unchanged. */
+body.ascii-map-page .site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-site-header);
+  height: var(--header-height);
+  min-height: 0;
+  padding-block: 0;
+  align-items: center;
+  box-sizing: border-box;
+  background: var(--bg);
+}
+
+/* Any other page using the ASCII wordmark (see .ascii-home-link below)
+   in place of the plain-text .site-title matches this same height as
+   the homepage's fixed header above -- same --header-height,
+   padding-block: 0, align-items: center -- just without position:
+   fixed/top/left/right/z-index/background, since these pages' headers
+   stay in normal document flow and scroll away with the page as they
+   already did. :has() scopes this to exactly the pages that opted into
+   the wordmark, rather than shrinking every plain-text .site-title
+   page's header to match too. Higher specificity on the rule above
+   (body.ascii-map-page .site-header) means it still wins there without
+   any conflict -- this one only has a visible effect where that rule
+   doesn't apply. */
+.site-header:has(.ascii-home-link) {
+  height: var(--header-height);
+  min-height: 0;
+  padding-block: 0;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.site-title {
+  font-weight: 900;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  font-size: 1.2rem;
+}
+
+/* Site-header Home mark, replacing the plain-text .site-title link
+   there: a real, single <a> around one <pre>, not an image, so it
+   scales with the page's own type system and stays selectable/
+   readable text underneath the art -- a small four-line ASCII flower
+   bed. jgs7 (--font, the real local font, not a generic monospace
+   substitute), since this is fixed-width ASCII art whose shape depends
+   on every character occupying an identical cell width, exactly like
+   the Garden Map itself. cursor is unaffected here (.site-header a
+   already sets pointer): this link lives in the fixed header, not the
+   Garden Map, so it deliberately does NOT get the orange bee cursor the
+   map's own destinations use. font-size is a clamp() rather than a flat
+   value so the widest line (the ~42-column ground rule) never wraps or
+   forces horizontal scroll on narrow viewports -- see the matching
+   --header-height adjustment below, sized for this clamp's own tallest
+   real case rather than the old two-line mark's shorter one. */
+.ascii-home-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.ascii-home-logo {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  font-variant-ligatures: none;
+  font-family: var(--mono);
+  font-weight: normal;
+  font-style: normal;
+  font-size: clamp(0.42rem, 0.65vw, 0.7rem);
+  line-height: 0.9;
+  text-align: left;
+  color: inherit;
+}
+
+.ascii-home-link:focus-visible {
+  outline: 1px dashed currentColor;
+  outline-offset: 0.4rem;
+}
+
+.site-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 3rem;
+}
+
+.site-nav a {
+  font-weight: 900;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 1.2rem;
+}
+
+.site-nav a[aria-current="page"] {
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+/* Entrance */
+
+/* Width only -- centring is already handled entirely by the parent
+   .entrance-overlay's own display: flex; align-items: center;
+   justify-content: center (no self-transform on .entrance itself, so
+   there's nothing to integrate a width change around). max-width is a
+   safety clause for the narrow band between this rule's own min(80vw,
+   --entrance-width) and the @media (max-width: 700px) override below,
+   guaranteeing at least a 2rem margin on each side at any width in
+   between rather than letting the panel ever touch the viewport edge
+   before that breakpoint takes over. */
+.entrance {
+  width: min(80vw, var(--entrance-width));
+  max-width: calc(100vw - 4rem);
+  margin-inline: auto;
+  margin-block: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  background: var(--bg);
+  border: 1px dashed var(--border);
+  border-radius: 1.5rem;
+  padding: 3rem 2.5rem;
+}
+
+@media (max-width: 700px) {
+  .entrance {
+    width: calc(100vw - 1.5rem);
+    max-width: none;
+  }
+}
+
+.entrance > h1 {
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Shared wrapper for the entire visible Entrance composition (ASCII
+   logo, slide text, progress dots, NEXT/ENTER THE GARDEN) as one unit,
+   so it can be nudged down from the window's vertical centre via one
+   transform without moving or resizing .entrance itself, and without
+   giving slide 1/2/3 different offsets (there's only ever this one
+   wrapper -- nothing slide-specific about its position). Replicates
+   the flex column/gap/centering .entrance itself already provides,
+   since these children are no longer .entrance's own direct flex
+   items now that they're nested one level deeper inside this wrapper. */
+.entrance-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  transform: translateY(var(--entrance-content-offset-y));
+}
+
+/* Shared wrapper for the progress dots and the NEXT/ENTER THE GARDEN
+   button: .entrance-dots and .enter-link didn't already share a parent
+   (they were separate direct children of .entrance-body, spaced by
+   its flex gap above), so this wraps them as one unit rather than
+   moving each individually. gap: 1.5rem here reproduces that same
+   spacing internally, now that .entrance-body's own gap no longer
+   applies between them (they're nested one level deeper). Only
+   .entrance-navigation's position shifts (translateY, independent of
+   --entrance-content-offset-y above) -- the ASCII logo and slide text
+   stay exactly where --entrance-content-offset-y alone puts them. Like
+   .entrance-body, this is the one and only instance regardless of
+   which slide is active, so slide 1/2/3 and NEXT/ENTER THE GARDEN are
+   structurally guaranteed the same position -- there's nothing to
+   desync. */
+.entrance-navigation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  transform: translateY(calc(-1 * var(--entrance-navigation-offset-y)));
+}
+
+/* Decorative ASCII wordmark, shared by all three Entrance slides:
+   positioned outside .entrance-content (see that rule below) rather
+   than duplicated inside each .entrance-slide, so it's simply never
+   part of the slide-swapping mechanism at all -- there's nothing to
+   keep in sync between slides and no way for it to "jump" between
+   them, since only one instance ever exists. The now-hidden .entrance
+   h1 above still carries the page's one meaningful heading, read by
+   screen readers instead of this aria-hidden art.
+
+   container-type: inline-size turns this wrapper into a query
+   container, so .entrance-ascii-logo's font-size below can be sized in
+   cqw (a percentage of THIS element's own content width) rather than
+   guessing at the relationship between .entrance's min(94vw, 58rem)
+   cap and the viewport -- correct at any Entrance window size without
+   needing two separate formulas for the vw- and rem-capped regimes.
+   min-height keeps the reserved space constant across that same range
+   of computed font-sizes, so nothing below it shifts on resize. */
+.entrance-logo-area {
+  display: grid;
+  place-items: center;
+  min-height: var(--entrance-logo-height, 4.5rem);
+  width: 100%;
+  container-type: inline-size;
+}
+
+/* Same rendering treatment as the Garden Map's own ASCII Home artwork
+   (.ascii-home-logo): jgs7 (--mono), ligatures disabled, white-space:
+   pre so internal spacing/alignment is never touched, line-height: 1,
+   and the whole block centred as one object (width: max-content +
+   margin: 0 auto) rather than each row being centred independently.
+   2.5cqw sizes the artwork to roughly 92-93% of the logo area's own
+   width regardless of viewport (74 columns wide at jgs7's fixed 0.5em
+   per-character cell width: font-size_px * 0.5 * 74 = container_width_px
+   * 0.925 solves to ~2.5cqw), so it never wraps or overflows; the
+   clamp() floor/ceiling keep it from becoming illegibly small or
+   disproportionately large at extreme widths. */
+.entrance-ascii-logo {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto;
+  white-space: pre;
+  font-variant-ligatures: none;
+  font-family: var(--mono);
+  font-size: clamp(4px, 2.5cqw, 11px);
+  line-height: 1;
+  text-align: left;
+  color: inherit;
+}
+
+.framing {
+  font-size: 1.1rem;
+  margin: 0.75rem 0;
+}
+
+.provisional-desc {
+  color: var(--muted);
+  margin: 0.75rem 0 1.25rem;
+}
+
+.enter-link a,
+.enter-link button {
+  display: inline-block;
+  font: inherit;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  background: none;
+  color: inherit;
+  border: 1px dashed var(--fg);
+  border-radius: 999px;
+  padding: 0.6rem 1.75rem;
+  cursor: pointer;
+}
+
+/* Entrance slides — CSS-only carousel via :target, no JS required. Slide 1 is
+   the default (no fragment); slides 2 and 3 only show once their id is targeted.
+
+   .entrance-content is the one fixed-size box all three slides share —
+   sized generously enough for the longest slide's text — so switching
+   slides only swaps which absolutely-positioned slide is visible inside
+   it. The modal shell (title, dots, button) never moves, because nothing
+   below .entrance-content depends on which slide is currently showing. */
+.entrance-content {
+  position: relative;
+  width: 100%;
+  min-height: 9rem;
+}
+
+/* Visibility is driven by the native hidden attribute (set by
+   assets/js/entrance.js's showSlide()), not by :target/URL state — a
+   slide's on/off state lives only in the DOM and in JS's in-memory
+   currentSlide, so nothing about which slide is showing can "stick"
+   across a refresh via a leftover URL hash. Slide 1 has no hidden
+   attribute in the raw HTML, so it's already correct before JS runs. */
+.entrance-slide {
+  position: absolute;
+  inset: 0;
+  max-width: var(--content-width);
+  margin-inline: auto;
+  text-align: center;
+}
+
+@media (max-width: 45em) {
+  .entrance-content {
+    min-height: 13rem;
+  }
+}
+
+.entrance-dots {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  padding: 0;
+  background: none;
+  border: 1px dashed var(--fg);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.dot.is-active {
+  background: var(--fg);
+  border-style: solid;
+}
+
+.dot:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 4px;
+}
+
+/* Entrance overlay: hidden via the native hidden attribute, toggled by
+   entrance.js's resetEntrance()/enterGarden() for JS visitors, or by the
+   #garden-map :target rule below for the <noscript> fallback link — the
+   only way a no-JS visitor can dismiss it. Positioned below the fixed
+   header (top: var(--header-height)) rather than inset: 0, so the header
+   stays visible above it instead of being covered. */
+.entrance-overlay {
+  position: fixed;
+  top: var(--header-height);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+
+.entrance-overlay[hidden] {
+  display: none;
+}
+
+body:has(#garden-map:target) .entrance-overlay {
+  display: none;
+}
+
+/* Garden Status and Map Index stay fully hidden — not just covered — for
+   as long as the Entrance hasn't been dismissed. Same combined condition
+   entrance.js keeps in sync via document.body.classList, plus the same
+   no-JS :target fallback as the entrance-overlay rule above. */
+body.intro-active:not(:has(#garden-map:target)) .garden-status,
+body.intro-active:not(:has(#garden-map:target)) .map-index {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Map Index and Garden Status — a balanced pair of fixed interface
+   stations, pinned to the browser window (not a particular ancestor) so
+   they stay reachable as the page scrolls: Map Index on the left gutter
+   (aligned with the site title), Garden Status on the right gutter
+   (aligned with About). They share one visual language via .map-panel
+   rather than maintaining two styles. */
+
+.map-panel {
+  position: fixed;
+  z-index: var(--z-map-interface);
+  box-sizing: border-box;
+  /* Spec calls for a literal white background; using --bg instead keeps
+     that exact result in light mode while still following the site's
+     existing dark-mode variable everywhere else (--border/--fg already
+     resolve identically to the literal values the spec gives). */
+  background: var(--bg);
+  border: 1px dashed currentColor;
+  border-radius: 1.75rem;
+  padding: 1.25rem 1.4rem;
+  color: inherit;
+  box-shadow: none;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.map-panel summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  list-style: none;
+}
+
+.map-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.map-panel summary::after {
+  content: " [+]";
+}
+
+.map-panel[open] > summary::after {
+  content: " [-]";
+}
+
+.map-panel summary:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 4px;
+}
+
+@media (max-width: 700px) {
+  .map-panel {
+    padding: 0.85rem 1rem;
+  }
+}
+
+/* Map Index — always-available accessible overlay, condensed from the old
+   full text index. Top-left, left edge shares --page-gutter with the
+   site title. Height follows its content (no max-height/scroll), growing
+   downward as it opens.
+
+   top is set below the header rather than a flat rem value: now that
+   this panel is position: fixed (relative to the browser window, not
+   an ancestor that starts below the header), a flat offset would
+   overlap the header itself. Deriving it from --header-height +
+   --map-interface-gap instead of a separate hardcoded value per
+   breakpoint keeps it in sync automatically as the header's own height
+   changes (including the narrow-width override below 350px), rather
+   than needing its own parallel set of breakpoint values. */
+.map-index {
+  left: var(--page-gutter);
+  top: calc(var(--header-height) + var(--map-interface-gap));
+  width: clamp(13rem, 16vw, 17rem);
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+@media (max-width: 700px) {
+  .map-index {
+    width: min(12rem, calc(50vw - var(--page-gutter) - 1rem));
+  }
+}
+
+.map-index-body {
+  margin-top: 0.5rem;
+}
+
+/* Explicit fallback: some browsers don't natively collapse a closed
+   <details> that is itself absolutely positioned */
+.map-index:not([open]) .map-index-body {
+  display: none;
+}
+
+.index-group-label {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.map-index-body > div:first-child .index-group-label {
+  margin-top: 0;
+}
+
+.map-index-body ul {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+}
+
+.map-index-body li {
+  padding: 0.15rem 0;
+}
+
+/* Garden Status — real inventory counts plus a clearly-fenced "Computing
+   Climate" section of invented, non-measured values. Right edge shares
+   --page-gutter with About; expanded by default so the information is
+   visible without a click. */
+.garden-status {
+  right: var(--page-gutter);
+  bottom: var(--page-gutter);
+  /* Widened just enough that "External requests: 0 (measured)" and
+     "Device battery: nn% (charging)" stay on one line at desktop sizes
+     rather than wrapping mid-value -- not a dramatic change, the
+     previous clamp() this replaces was clamp(15rem, 18vw, 19rem). */
+  width: clamp(15rem, 19vw, 20.5rem);
+  height: auto;
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .garden-status {
+    width: min(12rem, calc(50vw - var(--page-gutter) - 1rem));
+  }
+}
+
+.garden-status-body {
+  margin-top: 0.5rem;
+}
+
+/* Explicit fallback: some browsers don't natively collapse a closed
+   <details> that is itself absolutely positioned */
+.garden-status:not([open]) .garden-status-body {
+  display: none;
+}
+
+.status-group ul {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+}
+
+.status-group li {
+  padding: 0.15rem 0;
+}
+
+/* Label/value layout for each Garden Status row: the label column sizes
+   to its own content (max-content) and never wraps mid-phrase (so
+   "External requests" or "Device battery" can't break across two
+   lines), the value column takes the rest of the row's width and wraps
+   normally if it needs to. Deliberately not pushed to the panel's far
+   right edge -- column-gap is a small, fixed space, matching the
+   panel's existing informal "label: value" reading rhythm rather than
+   turning it into a strict two-edge table. */
+.garden-status-row {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 0.5ch;
+  align-items: baseline;
+}
+
+.garden-status-label {
+  white-space: nowrap;
+}
+
+/* ASCII garden map — a plain-text composition, not interactive yet.
+   Whitespace is the artwork: preformatted, no wrapping, no reflow. */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Full-bleed: main.home-main already has no width constraint or padding
+   of its own (see above), so escaping the site's normal reading-column
+   max-width and --page-gutter here just means not opting into either —
+   no negative-margin trick needed. */
+.ascii-map-section {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Explicit bottom of the shared homepage stacking order (see the --z-*
+   variables in :root): the lowest visual layer, below its own hotspots
+   and shade-cells (--z-map-destinations, just above), Map Index/Garden
+   Status, content panels, and the header. Inert on .ascii-map-section
+   and .ascii-garden-map specifically -- neither is a positioned element
+   (z-index only has an effect on position: relative/absolute/fixed/
+   sticky), so this is a documentation-only no-op for those two; it's
+   .ascii-map-stage (position: relative, plus its own transform: scale()
+   from assets/js/ascii-map-scale.js, either of which independently
+   creates a stacking context) where it actually governs anything. Map
+   Index, Garden Status, and every dialog are DOM siblings of this
+   section under <main> -- not descendants of .ascii-map-stage -- so
+   that transform can't trap any of them inside this stacking context
+   regardless. */
+.ascii-map-section,
+.ascii-map-stage,
+.ascii-garden-map {
+  z-index: var(--z-garden-map);
+}
+
+.ascii-map-frame {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  /* assets/js/ascii-map-scale.js briefly measures the map at its natural
+     (unscaled, un-transformed) width before applying the fitted
+     transform. This is a safety net against that intermediate state
+     ever being wide enough to cause horizontal page overflow. It also
+     scopes assets/js/ascii-map-drag.js's horizontal panning: scrollLeft
+     can still be set on an overflow: hidden container via script, it
+     just has no native scrollbar or wheel/touch scrolling of its own. */
+  overflow: hidden;
+  line-height: 0;
+}
+
+/* assets/js/ascii-map-drag.js toggles is-dragging; this is the only
+   visual affordance for the drag interaction, no popup or icon. Wins
+   over the plain .ascii-map-frame/.ascii-map-stage/.ascii-garden-map
+   bee rule below on specificity alone (.ascii-map-frame.is-dragging has
+   two classes vs. one), so no !important or source-order dependency is
+   needed there -- the bee cursor is restored automatically the moment
+   is-dragging is removed.
+   .greenhouse-hit, .energy-hit, and .shade-cell (plain and .is-darkened)
+   all need their own explicit override here, though: each has its own
+   unconditional cursor rule below (orange-clear, black-backed) that
+   matches the element directly rather than merely inheriting from the
+   frame, so during a drag the pointer passing over any of them would
+   otherwise keep showing its own bee instead of grabbing -- a direct
+   match always wins over an inherited value regardless of the
+   ancestor's specificity. (.greenhouse-map-trigger and .energy-map-trigger
+   themselves are pointer-events:none and carry no cursor rule of their
+   own, so neither ever needs an override here.)
+   .shade-cell.is-darkened specifically needs its OWN three-class
+   selector here (not just inherited coverage from the plain .shade-cell
+   line below), not merely for directness: .ascii-garden-map
+   .shade-cell.is-darkened (three classes) is the same specificity as
+   .ascii-map-frame.is-dragging .shade-cell (also three), so without
+   this, source order alone would decide -- and the bee-cursor rule
+   sits later in the file, so it would silently win and a dragged ▓
+   cell would keep the backed bee instead of grabbing.
+   .seed-hit follows the same compound pattern as .greenhouse-hit and
+   .energy-hit now (its parent .seed-map-trigger is pointer-events:none
+   and carries no cursor rule of its own, just like
+   .greenhouse-map-trigger/.energy-map-trigger), so it needs the same
+   explicit override here too.
+   .soil-map-trigger is the exception, the same way .seed-map-trigger
+   originally was: a single plain anchor with no child .hit spans, so it
+   IS the hit region directly and carries its own unconditional
+   orange-bee rule below, needing the same explicit override here. */
+.ascii-map-frame.is-dragging,
+.ascii-map-stage.is-dragging {
+  cursor: grabbing;
+}
+
+.ascii-map-frame.is-dragging .greenhouse-hit,
+.ascii-map-stage.is-dragging .greenhouse-hit,
+.ascii-map-frame.is-dragging .energy-hit,
+.ascii-map-stage.is-dragging .energy-hit,
+.ascii-map-frame.is-dragging .seed-hit,
+.ascii-map-stage.is-dragging .seed-hit,
+.ascii-map-frame.is-dragging .soil-map-trigger,
+.ascii-map-stage.is-dragging .soil-map-trigger,
+.ascii-map-frame.is-dragging .permacomputing-map-trigger,
+.ascii-map-stage.is-dragging .permacomputing-map-trigger,
+.ascii-map-frame.is-dragging .permapublishing-map-trigger,
+.ascii-map-stage.is-dragging .permapublishing-map-trigger,
+.ascii-map-frame.is-dragging .community-map-trigger,
+.ascii-map-stage.is-dragging .community-map-trigger,
+.ascii-map-frame.is-dragging .screen-materiality-map-trigger,
+.ascii-map-stage.is-dragging .screen-materiality-map-trigger,
+.ascii-map-frame.is-dragging .digital-garden-map-trigger,
+.ascii-map-stage.is-dragging .digital-garden-map-trigger,
+.ascii-map-frame.is-dragging .image-reduction-hit,
+.ascii-map-stage.is-dragging .image-reduction-hit,
+.ascii-map-frame.is-dragging .shade-cell,
+.ascii-map-stage.is-dragging .shade-cell,
+.ascii-map-frame.is-dragging .shade-cell.is-darkened,
+.ascii-map-stage.is-dragging .shade-cell.is-darkened {
+  cursor: grabbing;
+}
+
+/* Custom ASCII bee cursor, scoped strictly to the visible Garden Map
+   artwork and its transparent Greenhouse and Energy hotspots -- never
+   to body/html, header, nav, Entrance, Map Index, Garden Status,
+   dialogs, or the Greenhouse Image Tool iframe (a separate document;
+   its own tools/greenhouse/style.css is untouched and keeps native
+   cursors).
+   `cursor` is inherited, but since none of those other regions are DOM
+   descendants of .ascii-map-frame, nothing here can leak into them --
+   the rules further below are an explicit, defensive restatement of
+   that rather than a fix for an actual leak.
+
+   The two "clear" variants render the exact same two-line ASCII bee
+   ( \ / on top, (|||)> below) in the real local jgs7 font -- baked to
+   pixels rather than left as live SVG <text font-family="jgs7">, since
+   a cursor image's font loading isn't reliably synchronous in every
+   engine (notably Safari); a raster export guarantees the actual jgs7
+   letterforms with zero runtime font request. The backed variant is an
+   SVG wrapping that identical raster bee (embedded as a base64 <image>,
+   still zero runtime font/network dependency) behind a plain vector
+   <rect fill="#ffffff" stroke="none"> -- a real stroke-free, filter-free
+   fill, rather than relying on a raster export's own edge antialiasing
+   to read as "no border" against an arbitrary backdrop. All three share
+   the same 44x34 canvas, bee position, and hotspot -- only the colour
+   and the presence of the white backing differ -- so switching between
+   them can't jump or resize the cursor.
+
+   Three states:
+   - plain map surface: black bee, transparent (ascii-bee-black-clear.png)
+   - a ░ / ▓ shade-cell (both plain and .is-darkened -- darkening only
+     ever adds that class and swaps the glyph, per
+     assets/js/ascii-map-interaction.js's darken(), it never removes
+     .shade-cell): black bee, compact white backing behind it
+     (ascii-bee-black-backed.svg), so the cursor keeps standing out
+     against the map's own glyph texture
+   - the real clickable destinations, the Greenhouse, Energy, Seed, and
+     Soil hotspots: fluorescent-orange bee, transparent
+     (ascii-bee-orange-clear.png) -- same asset and hotspot for all
+     three, since it's the same "this is clickable" affordance either way
+
+   Hotspot (38, 23): measured directly off the rendered bee (ImageMagick
+   -trim on an isolated ">" glyph render) rather than estimated -- it
+   sits right on the tip of the trailing ">", the direction the bee
+   faces, a little above its baseline so it's within the glyph's ink. */
+.ascii-map-frame,
+.ascii-map-stage,
+.ascii-garden-map {
+  cursor:
+    url("../cursors/ascii-bee-black-clear.png") 38 23,
+    auto;
+}
+
+.ascii-garden-map .shade-cell,
+.ascii-garden-map .shade-cell.is-darkened {
+  cursor:
+    url("../cursors/ascii-bee-black-backed.svg") 38 23,
+    pointer;
+}
+
+.greenhouse-hit,
+.energy-hit,
+.seed-hit,
+.soil-map-trigger,
+.permacomputing-map-trigger,
+.permapublishing-map-trigger,
+.community-map-trigger,
+.screen-materiality-map-trigger,
+.digital-garden-map-trigger,
+.image-reduction-hit {
+  cursor:
+    url("../cursors/ascii-bee-orange-clear.png") 38 23,
+    pointer;
+}
+
+.site-header,
+.site-nav,
+.entrance-overlay,
+.map-index,
+.garden-status,
+.greenhouse-dialog,
+.map-content-dialog {
+  cursor: auto;
+}
+
+.site-header a,
+.site-nav a,
+.entrance-overlay button,
+.map-index a,
+.map-index button,
+.garden-status button,
+.greenhouse-dialog button,
+.map-content-dialog button,
+.map-content-dialog a {
+  cursor: pointer;
+}
+
+/* The map is an interactive visual field, not selectable body text --
+   scoped to the map itself (frame, map, and its shade-cell spans) so
+   the rest of the site (header, Dictionary, Field Notes, About, Garden
+   Status, Map Index, Entrance) keeps normal text selection. Permanent
+   rather than toggled only while .is-dragging, since a plain mousedown
+   on the map (before any movement establishes drag vs. click) already
+   starts a native selection drag otherwise. */
+.ascii-map-frame,
+.ascii-garden-map,
+.ascii-garden-map .shade-cell {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ascii-garden-map,
+.ascii-garden-map * {
+  -webkit-user-drag: none;
+}
+
+/* Shared scaled subtree for the map: assets/js/ascii-map-scale.js applies
+   font-size and drives --map-scale here (moved up from .ascii-garden-map)
+   so the ASCII text and every map-destination trigger move and scale
+   together as one rigid unit. font-size is inherited, so .ascii-garden-map
+   and the triggers both compute em/ch units against this same value
+   without it being set twice. Kept as a separate element from the <pre>
+   specifically so assets/js/ascii-map-scale.js's innerHTML rewrite
+   (scoped to .ascii-garden-map only) can never reach a trigger.
+
+   transform reads from a custom property, --map-scale, rather than
+   assets/js/ascii-map-scale.js writing a full "scale(...)" transform
+   string directly: every recalculation sets this one variable to an
+   absolute value (never multiplied against whatever it held before), so
+   the map can never compound into a smaller or larger scale than the
+   frame actually warrants no matter how many times it's recalculated. */
+.ascii-map-stage {
+  position: relative;
+  display: block;
+  width: max-content;
+  /* Widest line in ASCII2_garden_map.txt, measured programmatically. */
+  --map-columns: 200;
+  /* This formula is the no-JS fallback only. When assets/js/ascii-map-scale.js
+     runs, it measures the pre's actual rendered width at a fixed 13px
+     reference size and replaces this with a precise transform: scale()
+     (uncapped, so the map may scale up past its natural size to reach
+     full width) instead of an estimated em-width constant. jgs7's cell
+     width measures exactly 0.5em (checked in the font file and live in
+     a browser at multiple widths -- 0.5 alone fit exactly flush with no
+     overflow); 0.52 keeps a small margin above that measured value
+     rather than the font's literal exact width, since this formula has
+     only been verified in one rendering engine. */
+  font-size: min(13px, calc(100vw / (var(--map-columns) * 0.52)));
+  transform: scale(var(--map-scale, 1));
+  transform-origin: top left;
+  /* Hidden until assets/js/ascii-map-scale.js's one authoritative
+     startup sequence (render -> wait for fonts -> wait for layout ->
+     measure -> scale) has applied its first real scale, so a too-small
+     or unscaled map can never flash before that -- see
+     body.map-scale-ready below. visibility, not display: none, since
+     the element must still be measurable (offsetWidth/scrollWidth etc.)
+     while hidden. The <noscript> override in index.html guarantees a
+     no-JS visitor (for whom body.map-scale-ready is never added, since
+     nothing ever sets it) still sees the map. */
+  visibility: hidden;
+}
+
+body.map-scale-ready .ascii-map-stage {
+  visibility: visible;
+}
+
+.ascii-garden-map {
+  display: block;
+  width: max-content;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  text-align: left;
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
+  color: var(--fg);
+  background: none;
+  /* jgs7 (--mono) -- checked directly in the font file (fontTools cmap):
+     it has a dedicated ░ glyph ("ltshade") at the same 14-unit advance
+     width as A, |, and space, so it doesn't have the missing-glyph /
+     fallback-substitution risk that would otherwise break cell-width
+     alignment for just that one character. */
+  font-family: var(--mono);
+  font-variant-ligatures: none;
+  letter-spacing: 0;
+  line-height: 1;
+  tab-size: 2;
+}
+
+/* One real link, several transparent hit regions: the roof, the
+   building (including its left extension), and [ Enter ] all open the
+   same dialog, but nearby descriptive text ("tending tools", "testing
+   conditions", "growing small systems") and unrelated ░/▓/map text must
+   stay non-clickable -- a single oversized rectangle covering the whole
+   area would swallow those too, and would also block map-drag and
+   ░→▓ clicks in the empty space around the building. The anchor itself
+   is unsized and pointer-events:none, so it never acts as one big
+   rectangle; only the .greenhouse-hit spans are actually hit-tested.
+   e.target inside the anchor is still one of these spans either way,
+   so .closest("a") in assets/js/ascii-map-drag.js's isExcludedTarget()
+   and document.elementFromPoint() in assets/js/ascii-map-interaction.js's
+   pointerup handler both already resolve correctly through them with no
+   changes needed there -- position:absolute already paints the spans
+   above the plain-flow <pre> regardless of source order, so a hit span
+   always wins hit-testing over whatever shade-cell character sits
+   beneath it.
+
+   ch is the CSS-native advance width of the "0" glyph in the current
+   font/size (self-adjusting if the font stack ever changes); 1 line ==
+   1em because .ascii-garden-map sets line-height: 1 -- both computed
+   against .ascii-map-stage's own font-size, same as the ASCII text
+   itself, so every hit region scales and moves with the map as one
+   unit. Coordinates measured directly from index.html's generated map
+   text (not estimated from a screenshot), rows counted 0-indexed from
+   the <pre>'s first line:
+   - roof (the peaked triangle, rows 58-61): widest row (61, "/...\\")
+     spans columns 59-76.
+   - building (top wall through the ground line and its connector post,
+     rows 62-68): union of the left extension (columns 39-60, the
+     "|---|---|---|---|---|" run on rows 65-66) and the main structure
+     (columns 58-77, the "/|...|\\" top wall on row 62) -- columns 39-77.
+     Includes the "[ GREENHOUSE ]" label (row 63) and the ^^^^ ground
+     line + support post (rows 67-68), clipped to the building's own
+     width rather than the full ^^^^ run, which continues to column 113
+     as an unrelated neighbouring structure.
+   - [ Enter ] (row 69): columns 63-72.
+   All three deliberately exclude "tending tools" / "testing conditions"
+   / "growing small systems", which start one column past the building's
+   right wall (column 77) on rows 64-66. */
+/* Stacking order (see --z-* variables in :root): one step above the
+   plain map/shade-cells they sit over, all still scoped inside
+   .ascii-map-stage's own local stacking context (established by its
+   position: relative and transform: scale()) -- this only orders these
+   triggers relative to the map's own content, it can never let them
+   compete with Map Index, the header, or a content panel outside that
+   context. */
+.map-destination,
+.greenhouse-map-trigger,
+.energy-map-trigger,
+.seed-map-trigger,
+.soil-map-trigger,
+.permacomputing-map-trigger,
+.permapublishing-map-trigger,
+.community-map-trigger,
+.screen-materiality-map-trigger,
+.digital-garden-map-trigger,
+.image-reduction-map-trigger {
+  z-index: var(--z-map-destinations);
+}
+
+.greenhouse-map-trigger {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.greenhouse-hit {
+  position: absolute;
+  display: block;
+  pointer-events: auto;
+  background: transparent;
+  -webkit-user-drag: none;
+}
+
+.greenhouse-hit-roof {
+  left: 59ch;
+  top: 58em;
+  width: 17ch;
+  height: 4em;
+}
+
+.greenhouse-hit-building {
+  left: 39ch;
+  top: 62em;
+  width: 38ch;
+  height: 7em;
+}
+
+.greenhouse-hit-enter {
+  left: 63ch;
+  top: 69em;
+  width: 9ch;
+  height: 1em;
+}
+
+/* Only the anchor is a tab stop -- the .greenhouse-hit spans have no
+   tabindex of their own. Outlining all three together on the anchor's
+   own :focus-visible gives keyboard users a real sense of the whole
+   clickable area without adding two more stops to the tab order, and
+   without showing anything during ordinary mouse use (the orange
+   cursor is the hover affordance; this is the separate, required
+   keyboard-focus affordance). */
+.greenhouse-map-trigger:focus-visible .greenhouse-hit {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+/* Energy trigger: same compound-anchor pattern as the Greenhouse
+   trigger just above (one pointer-events:none <a>, one or more
+   pointer-events:auto .energy-hit children so the trigger never
+   behaves as a single oversized rectangle over surrounding ░/▓ or map
+   text) -- here there's exactly one hit region, the sun.
+
+   Coordinates measured directly from the generated ASCII map text in
+   index.html (same row-is-0-indexed-from-the-<pre>, 1 row == 1em,
+   1 column == 1ch system used for the Greenhouse hit regions):
+     row 3  cols 41-46  "\  |  /"
+     row 4  cols 39-48  "'-.;;;.-'"
+     row 5  cols 38-49  "-==;;;;;==-"   <- widest row
+     row 6  cols 39-48  ".-';;;'-."
+     row 7  cols 41-46  "/  |  \"
+   Bounding box: left 38, right 49 (width 11ch), rows 3-7 (height 5em) --
+   the widest row sets the horizontal extent, tight enough that it
+   doesn't reach into surrounding ░ background either side. */
+.energy-map-trigger {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.energy-hit {
+  position: absolute;
+  display: block;
+  pointer-events: auto;
+  background: transparent;
+  -webkit-user-drag: none;
+}
+
+.energy-hit-sun {
+  left: 38ch;
+  top: 3em;
+  width: 11ch;
+  height: 5em;
+}
+
+.energy-map-trigger:focus-visible .energy-hit {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+/* Seed trigger: same compound-anchor pattern as the Greenhouse and
+   Energy triggers above (one pointer-events:none <a>, two or more
+   pointer-events:auto .seed-hit children so the trigger never behaves
+   as a single oversized rectangle over surrounding ░/▓ or unrelated map
+   text) -- here there are two disjoint hit regions, the "[ SEED ]"
+   label and the two-line question below it, both opening the same
+   #seed-dialog through the one shared anchor.
+
+   Coordinates measured directly from the generated ASCII map text in
+   index.html (same row-is-0-indexed-from-the-<pre>, 1 row == 1em,
+   1 column == 1ch system used above):
+     row 15         cols 105-113 (8ch)  "[ SEED ]"
+     row 17         cols 98-123  (25ch) "How might publishing grow"
+     row 18         cols 97-122  (25ch) "under limited conditions?"
+   The question's two lines start one column apart (98 vs. 97) rather
+   than aligning exactly -- .seed-hit-question is their union (cols
+   97-123, 26ch), which only ever adds a single ░ background column on
+   each line's short side, never reaching into any unrelated
+   surrounding ASCII (confirmed directly against the generated map: rows
+   16 and 19 immediately above/below are plain ░ background in that
+   column range). */
+.seed-map-trigger {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.seed-hit {
+  position: absolute;
+  display: block;
+  pointer-events: auto;
+  background: transparent;
+  -webkit-user-drag: none;
+}
+
+.seed-hit-title {
+  left: 105ch;
+  top: 15em;
+  width: 8ch;
+  height: 1em;
+}
+
+.seed-hit-question {
+  left: 97ch;
+  top: 17em;
+  width: 26ch;
+  height: 2em;
+}
+
+.seed-map-trigger:focus-visible .seed-hit {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+/* Image Reduction trigger (Garden Bed 01): same compound-anchor pattern
+   as Greenhouse/Energy/Seed above, though here there's exactly one
+   contiguous hit region -- the complete ASCII box, border included --
+   rather than several disjoint ones, since the task requires the whole
+   drawn object (not just the "[ GARDEN BED 01 ]" label) to be
+   clickable.
+
+   Coordinates measured directly from the generated ASCII map text in
+   index.html (same row-is-0-indexed-from-the-<pre>, 1 row == 1em,
+   1 column == 1ch system used above): the box's top border
+   ("+====================+") sits on row 92, its bottom border on row
+   100 (9 rows total including both borders), and both borders run from
+   column 65 to column 86 inclusive (22ch, matching the 22-character
+   "+====================+" string) -- confirmed directly against the
+   generated map text, with plain ░ background immediately above (row
+   91) and below (row 101), so the hotspot can cover the full box with
+   no risk of reaching into unrelated surrounding map art. */
+.image-reduction-map-trigger {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.image-reduction-hit {
+  position: absolute;
+  display: block;
+  pointer-events: auto;
+  background: transparent;
+  -webkit-user-drag: none;
+  left: 65ch;
+  top: 92em;
+  width: 22ch;
+  height: 9em;
+}
+
+.image-reduction-map-trigger:focus-visible .image-reduction-hit {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+/* Soil trigger: a single plain anchor, same as Seed's original
+   title-only hotspot -- the "[ SOIL ]" label is one unbroken run of
+   text with no separate sub-regions to carve out.
+
+   Coordinates measured directly from the generated ASCII map text in
+   index.html (same row-is-0-indexed-from-the-<pre>, 1 row == 1em,
+   1 column == 1ch system used above): row 33, columns 106-114
+   ("[ SOIL ]", 8 characters, including the single literal space
+   character flanking each bracket in the source -- confirmed directly
+   against the generated map, not estimated), flanked by ░ background
+   with no adjacent text -- the hotspot covers exactly the label and
+   nothing more. */
+.soil-map-trigger {
+  position: absolute;
+  left: 106ch;
+  top: 33em;
+  width: 8ch;
+  height: 1em;
+  display: block;
+  background: transparent;
+  -webkit-user-drag: none;
+}
+
+.soil-map-trigger:focus-visible {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+/* Permacomputing trigger: a single plain anchor over just the word
+   itself, deliberately excluding the surrounding "♦ ... ♦ → computing
+   within limits." decorative diamonds and explanatory text on the same
+   line.
+
+   Coordinates measured directly from the generated ASCII map text in
+   index.html (same row-is-0-indexed-from-the-<pre>, 1 row == 1em,
+   1 column == 1ch system used above): row 37, columns 27-41
+   ("Permacomputing", 14 characters). A full literal space character
+   already separates the word from the "♦" on both sides in the source
+   (columns 26 and 41), so the tightly-fitted word-only box needs no
+   extra padding to avoid touching them. */
+.permacomputing-map-trigger {
+  position: absolute;
+  left: 27ch;
+  top: 37em;
+  width: 14ch;
+  height: 1em;
+  display: block;
+  background: transparent;
+  -webkit-user-drag: none;
+}
+
+.permacomputing-map-trigger:focus-visible {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+/* Permapublishing trigger: same single-plain-anchor pattern as
+   Permacomputing just above, over just the word itself, excluding the
+   surrounding "♦ ... ♦ → publishing as maintenance" decoration on the
+   same line.
+
+   Coordinates measured directly from the generated ASCII map text in
+   index.html (same row-is-0-indexed-from-the-<pre>, 1 row == 1em,
+   1 column == 1ch system used above): row 40, columns 49-64
+   ("Permapublishing", 15 characters). A full literal space character
+   already separates the word from the "♦" on both sides in the source
+   (columns 48 and 64), so the tightly-fitted word-only box needs no
+   extra padding to avoid touching them. */
+.permapublishing-map-trigger {
+  position: absolute;
+  left: 49ch;
+  top: 40em;
+  width: 15ch;
+  height: 1em;
+  display: block;
+  background: transparent;
+  -webkit-user-drag: none;
+}
+
+.permapublishing-map-trigger:focus-visible {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+/* Community trigger: same single-plain-anchor pattern as
+   Permacomputing/Permapublishing above, over just the word itself,
+   excluding the surrounding "♦ ... ♦ → shared care and participation."
+   decoration on the same line (row 37, shared with the Permacomputing
+   trigger further left on the same source line).
+
+   Coordinates measured directly from the generated ASCII map text in
+   index.html (same row-is-0-indexed-from-the-<pre>, 1 row == 1em,
+   1 column == 1ch system used above): row 37, columns 81-90
+   ("Community", 9 characters). A full literal space character already
+   separates the word from the "♦" on both sides in the source (columns
+   80 and 90), so the tightly-fitted word-only box needs no extra
+   padding to avoid touching them. */
+.community-map-trigger {
+  position: absolute;
+  left: 81ch;
+  top: 37em;
+  width: 9ch;
+  height: 1em;
+  display: block;
+  background: transparent;
+  -webkit-user-drag: none;
+}
+
+.community-map-trigger:focus-visible {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+/* Screen Materiality trigger: same single-plain-anchor pattern as the
+   other word-only hotspots above, over just the word itself, excluding
+   the surrounding "♦ ... ♦ → screens, hardware, and material traces"
+   decoration on the same line (row 40, shared with the Permapublishing
+   trigger further left on the same source line).
+
+   Coordinates measured directly from the generated ASCII map text in
+   index.html (same row-is-0-indexed-from-the-<pre>, 1 row == 1em,
+   1 column == 1ch system used above): row 40, columns 107-118
+   ("Materiality", 11 characters). A full literal space character
+   already separates the word from the "♦" on both sides in the source
+   (columns 106 and 118), so the tightly-fitted word-only box needs no
+   extra padding to avoid touching them. */
+.screen-materiality-map-trigger {
+  position: absolute;
+  left: 107ch;
+  top: 40em;
+  width: 11ch;
+  height: 1em;
+  display: block;
+  background: transparent;
+  -webkit-user-drag: none;
+}
+
+.screen-materiality-map-trigger:focus-visible {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+/* Digital Garden trigger: same single-plain-anchor pattern as the
+   other word-only hotspots above, over just the two words themselves,
+   excluding the surrounding "♦ ... ♦ → living, connected knowledge"
+   decoration on the same line (row 37, shared with the Permacomputing
+   and Community triggers further left on the same source line).
+
+   Coordinates measured directly from the generated ASCII map text in
+   index.html (same row-is-0-indexed-from-the-<pre>, 1 row == 1em,
+   1 column == 1ch system used above): row 37, columns 140-154
+   ("Digital Garden", 14 characters, including the internal space
+   between the two words). A full literal space character already
+   separates the label from the "♦" on both sides in the source
+   (columns 139 and 154), so the tightly-fitted box needs no extra
+   padding to avoid touching them. */
+.digital-garden-map-trigger {
+  position: absolute;
+  left: 140ch;
+  top: 37em;
+  width: 14ch;
+  height: 1em;
+  display: block;
+  background: transparent;
+  -webkit-user-drag: none;
+}
+
+.digital-garden-map-trigger:focus-visible {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+/* assets/js/ascii-map-interaction.js: each background ░ character
+   becomes one of these. Plain inline spans with no border/padding/
+   margin, so they take up exactly the same cell width as the character
+   they wrap -- no layout shift versus the plain-text original. Color
+   change only, never a font/weight change, so metrics can't drift.
+   Cursor: handled by the .ascii-garden-map .shade-cell, .is-darkened
+   selector in the ascii-bee cursor rule above -- must not be repeated
+   here. (It previously was, as `cursor: default`, which silently won
+   over the backed-bee rule above on equal specificity + later source
+   order, leaving darkened ▓ cells with the plain arrow cursor instead
+   of the backed bee.) */
+.shade-cell.is-darkened {
+  color: var(--muted);
+}
+
+/* assets/js/ascii-map-interaction.js wraps exactly eight primary Garden
+   Map labels ("[ SEED ]", "[ SOIL ]", "[ GREENHOUSE ]", the three
+   "[ GARDEN BED 0N ]", "[ COMPOST ]", "[ HARVEST ]") in these spans, so
+   they render in jgs5 instead of the surrounding jgs7 (via --mono).
+   Measured directly (assets/jgs-main/fonts/webfonts/jgs5.woff2 vs.
+   jgs7.woff2, both loaded and rendered at 13px): the two fonts already
+   share an identical monospace cell width, so no letter-spacing or
+   horizontal scale correction is applied here -- but the fixed-width
+   footprint below is kept regardless, as a deliberate guarantee against
+   that ever changing (a different jgs5 build, a future font swap) or
+   differing subtly between engines, rather than trusting an assumption.
+   --label-columns (the label's own source character count) and
+   --map-cell-width (the map's real measured per-character px width,
+   immune to .ascii-map-stage's later transform: scale() since it's
+   read via offsetWidth, not getBoundingClientRect -- see the renderer)
+   are both written inline per span by the renderer. inline-block +
+   this fixed width reserves exactly the same grid footprint the
+   original plain jgs7 text occupied, so nothing after a label can
+   shift; overflow: visible is a safety net only, not an expected
+   escape hatch, since the widths already match. No color/weight/size/
+   background/outline changes -- inherits --fg (black) from
+   .ascii-garden-map like every other map character; the font switch
+   alone is the intended visual distinction. */
+.map-primary-label {
+  font-family: "jgs5", monospace;
+  font-weight: normal;
+  font-style: normal;
+  white-space: pre;
+  display: inline-block;
+  width: calc(var(--label-columns) * var(--map-cell-width, 1ch));
+  text-align: left;
+  overflow: visible;
+  vertical-align: baseline;
+}
+
+/* Sections */
+
+main section {
+  margin: 2rem 0;
+}
+
+main section h2 {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.25rem;
+}
+
+/* Bed metadata block (individual bed pages) */
+
+.bed-meta {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin: 1.5rem 0;
+  padding: 0.25rem 0;
+}
+
+.bed-meta .meta-row {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: 0.5rem 1rem;
+  padding: 0.4rem 0;
+}
+
+.bed-meta dt {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.bed-meta dd {
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .bed-meta .meta-row {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+}
+
+/* Breadcrumb, provisional labels */
+
+.breadcrumb {
+  font-size: 0.85rem;
+}
+
+.breadcrumb a {
+  text-decoration: none;
+}
+
+.provisional,
+.provisional-note {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.note-meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* Field Notes archive (field-notes/index.html) -- a dated process log,
+   not a thesis-chapter or card grid. Slightly wider than the site's
+   default 42rem reading column so the three-column row (date / title /
+   status) has room to breathe without cramming the title. */
+main.field-notes-page {
+  max-width: 46rem;
+}
+
+/* Individual Field Note pages (field-notes/note-*.html) are image-led:
+   substantially wider than the archive so one process photograph can
+   occupy most of the reading area (see .field-note-figure below)
+   instead of being squeezed into prose-width. 72rem here, combined with
+   the base main rule's 1rem side padding, gives exactly a 70rem content
+   box -- matching .field-note-figure's own 70rem cap so a full-width
+   image reaches it precisely rather than stopping short. */
+main.field-note-page {
+  max-width: 72rem;
+}
+
+#field-notes-title,
+#dictionary-title,
+#about-title {
+  font-family: "jgs5", monospace;
+}
+
+.field-notes-kicker {
+  margin: 0.5rem 0 1.5rem;
+  font-size: 0.95rem;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.field-notes-intro {
+  max-width: 34rem;
+  margin: 0 0 1.5rem;
+}
+
+.field-note-list {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 1.5rem 0 0;
+  border-top: 1px dashed var(--border);
+}
+
+.field-note-list li {
+  border-bottom: 1px dashed var(--border);
+}
+
+.field-note-list li:first-child {
+  border-top: none;
+}
+
+/* Non-interactive column labels for the four-column row grid below --
+   same grid-template-columns so DATE/TITLE/COMPONENT/STATUS line up
+   exactly over their data, but a plain div (not part of the <ol>/<li>
+   list structure), sitting just above it. */
+/* font-size deliberately stays off this rule and lives on the child
+   spans instead (below): `ch` in grid-template-columns resolves against
+   the font-size of the element it's declared on, so shrinking the text
+   here directly would shrink every "ch" column's pixel width too,
+   throwing the header out of alignment with .field-note-row's
+   same-looking but base-font-size columns. */
+.field-notes-header {
+  display: grid;
+  grid-template-columns: 8ch minmax(18rem, 1fr) 14ch 14ch;
+  column-gap: 1.5rem;
+  align-items: baseline;
+  padding: 0 0.25rem 0.5rem;
+  color: var(--muted);
+}
+
+.field-notes-header span {
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+/* Each complete row is the one link (date, title, component, and status
+   all inside the same <a>) rather than only the title -- display: grid
+   works directly on the anchor, no separate wrapper needed. Title gets
+   the most space (minmax(18rem, 1fr)); component and status are fixed
+   14ch columns, wide enough for "TRANSPLANTED"/"DESIGN & CODE" without
+   wrapping at normal desktop widths. */
+.field-note-row {
+  display: grid;
+  grid-template-columns: 8ch minmax(18rem, 1fr) 14ch 14ch;
+  column-gap: 1.5rem;
+  align-items: baseline;
+  padding: 0.85rem 0.25rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.field-note-row:focus-visible {
+  outline: 1px dashed currentColor;
+  outline-offset: 0.3rem;
+}
+
+.field-note-title {
+  min-width: 0;
+}
+
+/* Not colour alone: uppercase + letter-spacing + a muted (not coloured)
+   ink is enough of a typographic difference to read as data columns
+   rather than part of the title -- same treatment for both Component
+   and Status, since neither should visually dominate the other. */
+.field-note-component,
+.field-note-status {
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  /* Column labels only make sense against the four-column grid --
+     nothing to align them with once rows stack. */
+  .field-notes-header {
+    display: none;
+  }
+
+  /* Date, component, and status become one wrapping flex line (never
+     forced onto one line at the cost of horizontal overflow -- long
+     combinations just wrap within that line); title gets flex-basis:
+     100% to start a new line of its own directly below, using the
+     `order` property to place it there without touching source order
+     (still date, title, component, status underneath) or duplicating
+     any text via CSS content. */
+  .field-note-row {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.5rem;
+    row-gap: 0.25rem;
+  }
+
+  .field-note-row time {
+    order: 1;
+  }
+
+  .field-note-component {
+    order: 2;
+  }
+
+  .field-note-status {
+    order: 3;
+  }
+
+  .field-note-title {
+    order: 4;
+    flex-basis: 100%;
+  }
+
+  .field-note-component::before,
+  .field-note-status::before {
+    content: "· ";
+  }
+}
+
+/* Sits between the intro paragraph and the list now, so its own
+   spacing only needs a bottom margin -- the list's existing
+   border-top + padding-top (see .field-note-list above) already
+   supplies the divider and gap down to the first row. */
+.field-notes-status-key {
+  margin: 0 0 1.5rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* Individual note pages -- image-led process documentation: a compact
+   header and metadata line, then one large figure per process image in
+   source order, then navigation. No more fixed five-question writing
+   structure (What I was trying / What happened / ...) -- images carry
+   the page; text only annotates them. */
+
+.field-note-header {
+  margin-bottom: 1rem;
+}
+
+.field-note-number {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.field-note-header time {
+  display: block;
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+/* "may use jgs5 according to the current Field Notes typography" --
+   matches #field-notes-title on the archive; note number/date/metadata
+   stay in the default jgs7 (--mono). */
+.field-note-header h1 {
+  margin: 0;
+  font-family: "jgs5", monospace;
+}
+
+/* One short paragraph of quick context, not a subtitle or an abstract:
+   default body size/weight (no enlarging, no auto-italic), capped
+   narrower than the wide image column below rather than stretching to
+   match it, and never boxed -- secondary to the images purely by being
+   brief, in the same way .field-note-meta is secondary by being
+   compact. */
+.field-note-intro {
+  max-width: 48rem;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+/* Compact and secondary, sitting directly below the header rather than
+   in a bordered panel of its own. Each note's HTML only ever renders
+   the dt/dd pairs it actually has a value for (see note-*.html) -- a
+   note with nothing but a Status renders just "Status: Growing", never
+   an empty Material/Related bed row with an invented placeholder. */
+.field-note-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  margin: 0 0 2rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.field-note-meta div {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.field-note-meta dt::after {
+  content: ":";
+}
+
+.field-note-meta dd {
+  margin: 0;
+  color: var(--fg);
+}
+
+/* Images first: each process photograph is its own large figure in
+   normal flow, so several figures in a row already read as a vertical
+   sequence -- no gallery/grid wrapper needed for that. width: min(100%,
+   70rem) plus main.field-note-page's 72rem max-width (above) lets the
+   image reach a genuinely large size on wide screens while staying
+   fluid below that; centered only because 70rem can be narrower than
+   the 70rem content box on in-between viewports, not as a design
+   choice to set it apart from the left-aligned text around it. */
+.field-note-figure {
+  width: min(100%, 70rem);
+  margin: 0 auto 2.5rem;
+}
+
+/* Constrained by both available width AND viewport height, so a tall
+   portrait photograph is never taller than what's visible at once --
+   the visitor scrolls BETWEEN images, never inside one. --header-height
+   is the same variable the fixed homepage header uses elsewhere; it's
+   still subtracted here as a deliberate buffer even though these
+   pages' own header stays in normal document flow rather than
+   overlapping content. object-fit: contain (never cover) guarantees no
+   cropping -- the image always renders at its full, undistorted aspect
+   ratio, just scaled down when the height limit is the binding
+   constraint rather than width. svh (with a plain vh fallback for
+   browsers that don't support it) avoids mobile browser chrome
+   resizing the image as it shows/hides. */
+.field-note-figure img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - var(--header-height) - 10rem);
+  max-height: calc(100svh - var(--header-height) - 10rem);
+  margin-inline: auto;
+  object-fit: contain;
+}
+
+.field-note-figure video {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - var(--header-height) - 10rem);
+  max-height: calc(100svh - var(--header-height) - 10rem);
+  margin-inline: auto;
+  object-fit: contain;
+}
+
+/* Author display: block above otherwise beats the browser's own
+   [hidden] { display: none } UA rule (author styles win over UA styles
+   regardless of specificity), which would silently render a
+   .field-note-video-figure's <video> -- and reserve its layout space --
+   before the visitor has ever clicked play. */
+.field-note-figure video[hidden] {
+  display: none;
+}
+
+/* Scoped to Field Note pages only -- Energy's and Digital Garden's own
+   use of this same .image-reveal button elsewhere on the site keep
+   their existing fixed-width sizing unchanged. Here the button becomes
+   a centering flex box so the now viewport-height-limited <img> above
+   sits centered inside it rather than being stretched back out to the
+   button's full width. .field-note-video-trigger (the video-poster
+   button below) shares this exact treatment for the same reason. */
+.field-note-figure .image-reveal,
+.field-note-figure .field-note-video-trigger {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Same author-beats-UA-[hidden] problem as .field-note-figure
+   video[hidden] below: this rule's own display: flex above (and the
+   base .field-note-video-trigger { display: block } further down)
+   would otherwise keep the poster button laid out -- and taking up
+   space -- after assets/js/field-note-video.js hides it post-click. */
+.field-note-figure .field-note-video-trigger[hidden] {
+  display: none;
+}
+
+/* Three-class specificity (0,3,0) is required here, not redundant with
+   .field-note-figure img above: the global .image-reveal img rule
+   (Energy's fixed width: 100%, elsewhere in this file) has equal
+   two-class specificity (0,2,0) to that rule and would otherwise win
+   the cascade purely by appearing later in the file, silently
+   stretching every Field Note image using the reveal button back out
+   to full width regardless of its own aspect ratio. */
+.field-note-figure .image-reveal img {
+  width: auto;
+  max-width: 100%;
+  max-height: calc(100vh - var(--header-height) - 10rem);
+  max-height: calc(100svh - var(--header-height) - 10rem);
+  object-fit: contain;
+}
+
+/* field-note-video-trigger's own poster <img> doesn't need the same
+   specificity fight as .image-reveal img above: nothing else in this
+   file targets an <img> inside .field-note-video-trigger, so the plain
+   .field-note-figure img rule (width: auto/height: auto/max-height/
+   object-fit: contain) already applies cleanly on its own. Only the
+   button itself needs sizing/position rules here. */
+.field-note-video-trigger {
+  position: relative;
+}
+
+/* Text-only indicator, deliberately no icon/background/shadow -- reads
+   like the site's other bracketed labels ("[ Seeds ]" etc.) rather than
+   a video-platform play button. pointer-events: none so a click
+   anywhere on the poster (including directly on this label) still hits
+   the button underneath. */
+.field-note-video-play {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  font-family: "jgs7", monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  color: var(--fg);
+  pointer-events: none;
+}
+
+/* Letterboxing behind a video whose own aspect ratio doesn't fill its
+   box exactly (native controls sit on top regardless) -- no fixed
+   aspect-ratio is set here, since that would crop or letterbox-distort
+   the actual recording instead of just backing it. */
+.field-note-video video {
+  background: #000;
+}
+
+/* Reads as a field annotation attached to the image above it, not a
+   separate essay: narrower than the image itself where that helps
+   readability, but left-aligned with it rather than centered on its
+   own. */
+.field-note-caption,
+.field-note-text {
+  max-width: 52rem;
+  margin-top: 0;
+  padding: 0.65rem 0.75rem;
+  border-top: 1px dashed currentColor;
+  font-size: 0.9em;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.field-note-images-pending {
+  margin: 0 0 2.5rem;
+  padding: 1rem 0;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* For a text-led Field Note like "How small can an image become?" that
+   documents references rather than process photographs -- a compact
+   reading list, not a card grid. Narrower than the page's own 72rem
+   width (image-led notes need that width for large media; this one
+   never has any), and each entry is separated by a thin dashed rule
+   rather than a box, matching .field-note-caption's own restrained
+   divider language elsewhere on these pages. */
+.field-note-references {
+  max-width: 52rem;
+}
+
+.field-note-reference {
+  padding-block: 1.5rem;
+  border-top: 1px dashed currentColor;
+}
+
+.field-note-reference:first-child {
+  border-top: 0;
+}
+
+.field-note-reference h2 {
+  margin: 0 0 0.6rem;
+  padding-bottom: 0;
+  border-bottom: 0;
+  font-size: 1.05rem;
+}
+
+.field-note-reference h2 a {
+  color: inherit;
+}
+
+.field-note-reference p:last-child {
+  margin-bottom: 0;
+}
+
+.field-note-pending {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.field-note-nav {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+/* About page — standalone static editorial page, centred like every
+   other standalone page (Dictionary, Field Notes archive): relies on
+   the base `main` rule for centring (margin: 0 auto) and top/bottom
+   padding, only narrowing max-width to the site's shared 42rem
+   reading column (see the Field Notes archive comment above) rather
+   than introducing a wider, one-off measure for this page alone. */
+main.about-page {
+  max-width: 42rem;
+}
+
+.about-content h1 {
+  margin: 0.5rem 0 0;
+  font-family: "jgs5", monospace;
+}
+
+.about-section {
+  margin-top: 3rem;
+}
+
+.about-section h2 {
+  margin-bottom: 1rem;
+  /* Small editorial label, not a heading -- overrides the site-wide
+     `main section h2` rule/padding-bottom (see general Sections rule
+     above) so the bracketed label reads as text, not a divided block. */
+  border-bottom: 0;
+  padding-bottom: 0;
+  font-size: 1rem;
+}
+
+.about-lines {
+  line-height: 1.6;
+}
+
+/* Dictionary page — vocabulary index, same centred/shared-width logic
+   as About directly above: base `main` rule handles centring and
+   top/bottom padding, this only narrows max-width to the same shared
+   42rem reading column. #dictionary-title already picks up jgs5 from
+   the shared title rule near the Field Notes archive comment, so no
+   font-family override is needed here. */
+main.dictionary-page {
+  max-width: 42rem;
+}
+
+.dictionary-intro p {
+  max-width: 36rem;
+}
+
+.dictionary-group {
+  margin-top: 3rem;
+}
+
+.dictionary-group h2 {
+  margin: 0 0 1rem;
+  /* Clearly secondary to the h1: same uppercase-label treatment as
+     .field-note-number (muted colour + 0.05em tracking) rather than a
+     second heading size, and overrides the site-wide `main section h2`
+     border-bottom for the same reason as .about-section h2 above. */
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.dictionary-list {
+  margin: 0;
+}
+
+/* One dashed rule between entries -- not a box, not a rule under every
+   term -- matching .field-note-reference's own divider language. The
+   group heading already separates the first entry, so it gets none. */
+.dictionary-entry {
+  border-top: 1px dashed currentColor;
+}
+
+.dictionary-entry:first-of-type {
+  border-top: 0;
+}
+
+.dictionary-summary {
+  display: grid;
+  grid-template-columns: minmax(14rem, 0.8fr) minmax(0, 1.8fr) max-content;
+  column-gap: 2rem;
+  align-items: baseline;
+  padding-block: 0.9rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.dictionary-summary::-webkit-details-marker {
+  display: none;
+}
+
+.dictionary-summary:focus-visible {
+  outline: 1px dashed var(--fg);
+  outline-offset: 2px;
+}
+
+.dictionary-term {
+  color: var(--fg);
+}
+
+.dictionary-short {
+  color: var(--muted);
+}
+
+.dictionary-toggle {
+  font-variant-numeric: tabular-nums;
+}
+
+.dictionary-toggle::before {
+  content: "[+]";
+}
+
+.dictionary-entry[open] .dictionary-toggle::before {
+  content: "[\2212]";
+}
+
+/* Falls back to the page's own text column instead of trying to
+   indent to the summary grid's short-description column: that column
+   is `fr`-based and its rendered width shifts with viewport, so a
+   fixed indent would drift out of alignment rather than stay locked
+   under it. */
+.dictionary-definition {
+  max-width: 52rem;
+  padding-block: 0 1.5rem;
+}
+
+.dictionary-definition p {
+  margin: 0 0 0.75rem;
+}
+
+.dictionary-related {
+  margin-bottom: 0 !important;
+}
+
+@media (max-width: 700px) {
+  .dictionary-summary {
+    grid-template-columns: 1fr auto;
+    column-gap: 1rem;
+    row-gap: 0.35rem;
+  }
+
+  .dictionary-term {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .dictionary-toggle {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .dictionary-short {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+/* Greenhouse dialog */
+
+/* Explicit scroll lock while the dialog is open, on top of whatever a
+   given browser's <dialog> top-layer stacking already does implicitly
+   -- both html and body, since either can be the actual scrolling box
+   depending on the engine. assets/js/greenhouse-dialog.js adds/removes
+   this class and separately saves/restores the exact scroll position. */
+html.dialog-open,
+html.dialog-open body {
+  overflow: hidden;
+}
+
+/* [open] is required on this selector: the native UA stylesheet hides a
+   closed <dialog> via `dialog:not([open]) { display: none }`, and an
+   unscoped author rule that sets `display` here would win over that
+   regardless of specificity (author origin beats user-agent origin),
+   silently keeping the dialog -- and the iframe inside it -- visible
+   and hit-testable after close(). Found via testing: without [open],
+   map drag stayed blocked forever after the first close, because the
+   (still `display:flex`, just `open`-less) dialog kept intercepting
+   pointer events over the map. */
+/* Documentation/consistency only, not a functional change: a
+   showModal() dialog renders in the browser's top layer, a separate
+   stacking mechanism that already paints above the entire regular
+   document (including the fixed header) regardless of any z-index
+   value here. Declared anyway so every layer in the shared homepage
+   stacking order (see the --z-* variables in :root) has an explicit,
+   legible z-index rather than leaving this one layer to work "by
+   accident" of a browser mechanism a reader would have to already know
+   about. */
+.greenhouse-dialog {
+  z-index: var(--z-greenhouse-modal);
+}
+
+.greenhouse-dialog[open] {
+  width: min(94vw, 1500px);
+  height: calc(100dvh - var(--header-height) - 2rem);
+  max-height: 1000px;
+  padding: 0;
+  border: 1px dashed currentColor;
+  border-radius: 1.75rem;
+  background: var(--bg);
+  color: var(--fg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* Native showModal() centers across the full viewport by default,
+     which would sit the dialog over the fixed header too. This starts
+     it below the header instead, so the header stays visible above it. */
+  margin-top: calc(var(--header-height) + 1rem);
+  margin-inline: auto;
+}
+
+/* The top-layer ::backdrop covers the entire viewport, including the
+   fixed header, regardless of the dialog box's own smaller size --
+   kept faint (not the heavier tint a full-page modal would use) so the
+   header reads as visually unchanged above the dialog, per the "remains
+   visible above it" requirement, while still cueing that the map
+   underneath is inert. */
+.greenhouse-dialog::backdrop {
+  background: rgb(0 0 0 / 0.06);
+}
+
+.greenhouse-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px dashed currentColor;
+  flex: none;
+}
+
+.greenhouse-dialog-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.greenhouse-dialog-close {
+  font: inherit;
+  background: none;
+  color: inherit;
+  border: 1px dashed currentColor;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+
+/* flex: 1 with min-height: 0 sizes this to whatever height the header
+   row actually renders at, rather than a hardcoded/calc() offset --
+   consistent with this stylesheet's --header-height/--map-interface-gap
+   derived-value pattern elsewhere. */
+.greenhouse-dialog-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.greenhouse-tool-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--bg);
+}
+
+@media (max-width: 700px) {
+  .greenhouse-dialog[open] {
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    border-radius: 0;
+  }
+}
+
+/* Shared shell for every static-content homepage dialog (Energy, Seed,
+   and any future one) -- same [open]/::backdrop/header/close pattern as
+   the Greenhouse dialog above, sized for reading content instead of a
+   full-height tool: width caps at a comfortable paragraph measure
+   rather than Greenhouse's much wider iframe stage, and height is
+   bounded (not forced) by the viewport, scrolling its own content
+   rather than the whole page if it doesn't fit. Pinned to the left
+   (margin-right: auto, not margin-inline: auto) rather than centered,
+   so the still-visible Garden Map reads as the backdrop this window
+   sits over, not something the window interrupts the middle of.
+   Content-specific styling (Energy's image placeholder/design-responses
+   list/source citation, Seed's opening line/dash-list) stays in its own
+   dialog-specific classes below rather than living here -- only the
+   shell itself (box, header, close button, scrollable body) is shared.
+
+   Non-modal (assets/js/content-panel.js calls dialog.show(), never
+   showModal()), unlike the Greenhouse dialog above: these are reference
+   windows layered over the still-interactive Garden Map, not
+   interruptions. That has two concrete CSS consequences the modal
+   Greenhouse dialog never had to deal with:
+   - position: fixed is required, not optional. The UA default for
+     <dialog> is position: absolute, which (unlike a showModal() dialog
+     living in the top layer) positions it against the initial
+     containing block and lets it scroll away with the page. Since the
+     Garden Map is draggable/scrollable while these are open, fixed is
+     the only way for the panel to actually stay put on screen the way
+     "layered over the map" implies.
+   - z-index has to be declared explicitly (see the --z-* stacking
+     variables in :root): these panels sit ABOVE Map Index and Garden
+     Status (--z-map-interface) -- an open content panel is meant to
+     visually cover whatever part of Map Index it overlaps, per the
+     required stacking order -- but stay BELOW the fixed header
+     (--z-site-header) and the Greenhouse modal (--z-greenhouse-modal).
+     A single stable value is enough here (see .map-content-dialog
+     below): only one static content panel is ever open at a time
+     (assets/js/content-panel.js), so there's no "bring the focused one
+     in front of another visible one" case left to handle, unlike a
+     multi-window system. This ordering used to be automatic for free
+     via top-layer stacking when these were modal. */
+.map-content-dialog[open] {
+  position: fixed;
+  /* Explicit anchor, not left implicit: with top/left both auto (the
+     default), a fixed/absolute box with no positioned ancestor falls
+     back to its "static position" -- i.e. wherever it would have sat
+     in normal flow -- which for a <dialog> placed at the very end of
+     <main>, after the entire (very tall) Garden Map markup, is
+     thousands of pixels down the page, not the viewport's top-left.
+     showModal()'s browser-native centering used to paper over this
+     (it repositions the dialog itself, ignoring top/left/margin
+     entirely), so it never mattered while these were modal. Now that
+     dialog.show() leaves ordinary CSS positioning in charge, top/left
+     have to be pinned explicitly; margin-top/margin-left/margin-right
+     below then offset the box from this anchor exactly as before. */
+  top: 0;
+  left: 0;
+  width: min(94vw, 700px);
+  max-height: calc(100dvh - var(--header-height) - 2rem);
+  padding: 0;
+  border: 1px dashed currentColor;
+  border-radius: 1.75rem;
+  background: var(--bg);
+  color: var(--fg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-top: calc(var(--header-height) + 1rem);
+  margin-left: var(--page-gutter);
+  margin-right: auto;
+}
+
+/* Non-modal dialog.show() never creates a ::backdrop in the first place
+   (that element only exists for showModal()) -- kept transparent and
+   non-interactive here anyway as an explicit, defensive statement of
+   intent rather than relying on that implicitly. */
+.map-content-dialog::backdrop {
+  background: transparent;
+  pointer-events: none;
+}
+
+.map-content-dialog {
+  pointer-events: auto;
+  /* One stable shared value, not an incrementing per-open counter: only
+     one static content panel is ever open at once, so there is never a
+     "which of two visible panels is in front" question to answer. */
+  z-index: var(--z-content-panel);
+}
+
+.map-content-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px dashed currentColor;
+  flex: none;
+}
+
+.map-content-dialog-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: 0.03em;
+}
+
+.map-content-dialog-close {
+  font: inherit;
+  background: none;
+  color: inherit;
+  border: 1px dashed currentColor;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+
+.map-content-dialog-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.map-content-dialog-body p {
+  margin: 0 0 1rem;
+  line-height: 1.6;
+}
+
+/* Shared site-wide by any editorial image with a verified black-and-
+   white/colour asset pair (assets/js/image-reveal.js) -- currently only
+   Energy's photo, but not scoped to Energy: any future paired image on
+   any page or content panel reuses this same button, unstyled beyond
+   what's needed to make it disappear behind the <img> it wraps. */
+/* width: fit-content (not 100%) -- a full-width button around an image
+   that's narrower than its container (e.g. any Field Note portrait,
+   viewport-height-limited above) left a gap between the button's own
+   box and the visibly narrower BW image inside it. Once
+   assets/js/image-reveal.js measures and locks that image's actual
+   rendered box via --reveal-width/--reveal-height (see
+   [data-size-locked] below), this fit-content default no longer
+   matters for a locked button -- it only governs the brief moment
+   before the first measurement, and the no-JS fallback where locking
+   never happens at all. */
+/* .field-note-video-trigger (assets/js/field-note-video.js) shares this
+   exact same unstyled-button reset -- a video poster's click means
+   "play this video," never "reveal colour," so it never carries the
+   .image-reveal class itself, but the button chrome underneath should
+   look identical either way. */
+.image-reveal,
+.field-note-video-trigger {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  /* margin-inline: auto, not margin: 0 -- a fit-content-width button
+     narrower than its figure (any portrait image, or a landscape one
+     capped by viewport height rather than width) otherwise sits flush
+     left instead of centered, while .field-note-figure img/video's own
+     margin-inline: auto centers them correctly -- the exact mismatch
+     that made a video's poster button and the video itself land in two
+     different horizontal positions despite matching widths. */
+  margin-block: 0;
+  margin-inline: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.image-reveal img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.image-reveal:focus-visible,
+.field-note-video-trigger:focus-visible {
+  outline: 1px dashed currentColor;
+  outline-offset: 0.25rem;
+}
+
+/* Freezes the button to the BW image's own measured rendered box (set
+   by assets/js/image-reveal.js, in real pixels, not the source file's
+   natural/intrinsic dimensions) so switching to the colour asset can
+   never change the displayed size -- the colour <img> instead fills
+   this now-fixed box via object-fit: contain, which is safe even when
+   the colour file's own pixel dimensions or precise aspect ratio
+   differ slightly from the BW file's. Comes after every other
+   .image-reveal rule in this file (including the Field Note-scoped
+   ones above) so it wins any specificity tie by source order once a
+   button is actually locked; before that, or with JavaScript off, the
+   ordinary rules above still apply untouched. */
+.image-reveal[data-size-locked="true"] {
+  width: var(--reveal-width);
+  height: var(--reveal-height);
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.image-reveal[data-size-locked="true"] img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+}
+
+/* Shared between the dialog content above and the standalone
+   energy.html page below -- same figure, list, and citation styling
+   regardless of which context renders them. Mirrors
+   .digital-garden-figure's sizing/caption treatment. */
+.energy-figure {
+  margin: 0 0 1.5rem;
+  width: 22rem;
+  max-width: 100%;
+}
+
+.energy-figure figcaption {
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  font-style: normal;
+  color: var(--muted);
+}
+
+/* Dialog panel only, not the standalone page -- same reasoning as
+   .digital-garden-dialog-body .digital-garden-figure. */
+.energy-dialog-body .energy-figure {
+  width: 28rem;
+  margin-inline: auto;
+}
+
+.energy-heading {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.energy-design-responses {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+
+.energy-design-responses li {
+  margin-bottom: 0.4rem;
+}
+
+.energy-design-responses li::before {
+  content: "— ";
+}
+
+.energy-source {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.energy-source cite {
+  font-style: normal;
+  font-weight: 700;
+}
+
+.energy-source-url {
+  color: var(--muted);
+  word-break: break-all;
+}
+
+/* Seed dialog: title in jgs5 (scoped to Seed only, so Energy's title
+   keeps its current styling untouched), section headings matching the
+   same visual weight as Energy's .energy-heading, and a shared
+   em-dash list style for WORKING PRINCIPLES. Kept as its own
+   .dash-list class rather than reusing .energy-design-responses so
+   Energy's markup/CSS doesn't need to change. */
+#seed-dialog-title {
+  font-family: "jgs5", monospace;
+}
+
+.seed-dialog-body h3 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.dash-list {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+
+.dash-list li {
+  margin-bottom: 0.4rem;
+}
+
+.dash-list li::before {
+  content: "→ ";
+}
+
+/* Soil dialog: title in jgs5, same scoping rationale as Seed's title
+   above (Energy's/Seed's own titles stay untouched). No section
+   headings needed -- Soil's content is plain paragraphs plus one list,
+   no RESEARCH QUESTION/WORKING PRINCIPLES-style subdivisions. */
+#soil-dialog-title,
+#soil-page-title {
+  font-family: "jgs5", monospace;
+}
+
+/* Shared arrow-marker list style: generates the visible "→ " the same
+   way .dash-list generates "— ", so the four SOIL area names
+   (PERMACOMPUTING, PERMAPUBLISHING, COMMUNITIES OF PRACTICE, SCREEN
+   MATERIALITY) can stay plain text in the markup rather than needing
+   the arrow baked into each <li>, while list-style: none keeps the
+   browser's own bullet from also appearing. */
+.arrow-list {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+
+.arrow-list li {
+  margin-bottom: 0.4rem;
+}
+
+.arrow-list li::before {
+  content: "→ ";
+}
+
+/* Permacomputing dialog: title in jgs5 (same scoped-title pattern as
+   Seed/Soil above), one section heading matching Seed's
+   .seed-dialog-body h3 weight, and a source citation mirroring
+   .energy-source's thin dashed rule/typography exactly -- kept as its
+   own .content-source class rather than reusing .energy-source so
+   Energy's markup/CSS doesn't need to change (same rationale as
+   .dash-list existing separately from .energy-design-responses). */
+#permacomputing-dialog-title,
+#permacomputing-page-title {
+  font-family: "jgs5", monospace;
+}
+
+.permacomputing-dialog-body h3 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.content-source {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.content-source cite {
+  font-style: normal;
+  font-weight: 700;
+}
+
+/* Permapublishing dialog: same scoped-title/heading pattern as
+   Permacomputing above. .dash-list and .content-source are already
+   shared (Permacomputing established them), so no new list/citation
+   CSS is needed here at all. */
+#permapublishing-dialog-title,
+#permapublishing-page-title {
+  font-family: "jgs5", monospace;
+}
+
+.permapublishing-dialog-body h3 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Scoped override, not a change to the shared .dash-list rule itself:
+   this task's supplied content explicitly preserves the em dash ("—")
+   notation for Permapublishing's IN THIS GARDEN list, but .dash-list's
+   own li::before currently generates "→" instead. Rather than touch
+   that shared rule (which Seed and Permacomputing also use), this
+   scopes a higher-specificity em-dash override to Permapublishing's own
+   containers only. */
+.permapublishing-dialog-body .dash-list li::before,
+.permapublishing-page .dash-list li::before {
+  content: "→ ";
+}
+
+/* Community of Practice dialog: same scoped-title pattern as the other
+   panels. No .content-source/.dash-list reuse here -- this panel's
+   content is entries (name + description), not a citation or a marked
+   list, so it needs its own small set of rules instead: .community-section
+   groups each of the three named sections (COMMUNITIES, PROJECTS AND
+   PRACTICES, FURTHER LINKS) under a heading matching the other panels'
+   h3 weight; .community-entry separates each name/description pair with
+   spacing alone (no card background, border, or shadow, per the
+   "entries, not cards" requirement) and gives the name enough weight to
+   read as distinct from its description without introducing decorative
+   colour. Deliberately no href on any entry name yet (no authoritative
+   project URLs were supplied) -- once real links are added later,
+   wrapping each name's text in <a> needs no CSS changes here, since the
+   name's visual weight comes from the heading element itself.
+
+   Dialog and standalone page use different heading depths for the same
+   content, to avoid either one skipping a level: the dialog's own h2
+   title sits outside the scrollable body as header chrome, so its
+   in-body hierarchy is section h3 -> entry name h4. The standalone
+   page's h1 *is* the title, so its hierarchy shifts up one step:
+   section h2 (styled via the existing .energy-heading, no separate rule
+   needed here) -> entry name h3. */
+#community-dialog-title,
+#community-page-title {
+  font-family: "jgs5", monospace;
+}
+
+.community-dialog-body h3 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.community-entry {
+  margin-bottom: 1rem;
+}
+
+.community-entry h4,
+.community-page .community-entry h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1em;
+  font-weight: 700;
+}
+
+.community-entry p {
+  margin: 0;
+}
+
+/* Screen Materiality dialog: same scoped-title/heading pattern as the
+   other panels. .dash-list is already shared, so no new list CSS is
+   needed here at all. */
+#screen-materiality-dialog-title,
+#screen-materiality-page-title {
+  font-family: "jgs5", monospace;
+}
+
+.screen-materiality-dialog-body h3 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Scoped override, same rationale as Permapublishing's above: this
+   task's supplied content explicitly preserves the em dash ("—")
+   notation for the IN THIS GARDEN list, but .dash-list's own
+   li::before currently generates "→" instead. Rather than touch that
+   shared rule (which Seed, Permacomputing, and Permapublishing also
+   use), this scopes a higher-specificity em-dash override to Screen
+   Materiality's own containers only. */
+.screen-materiality-dialog-body .dash-list li::before,
+.screen-materiality-page .dash-list li::before {
+  content: "→ ";
+}
+
+/* Digital Garden dialog: same scoped-title/heading pattern as the
+   other panels, plus the same scoped em-dash override as
+   Permapublishing/Screen Materiality above (.dash-list's own
+   li::before currently generates "→", but this task's content
+   explicitly preserves "—"). */
+#digital-garden-dialog-title,
+#digital-garden-page-title {
+  font-family: "jgs5", monospace;
+}
+
+.digital-garden-dialog-body h3 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.digital-garden-dialog-body .dash-list li::before,
+.digital-garden-page .dash-list li::before {
+  content: "→ ";
+}
+
+/* Digital Garden's one photographic asset: capped well under the
+   reading column's full width rather than its own intrinsic 500px
+   width, monochrome and dithered already at the source so it reads as
+   a material trace rather than decoration -- no border, border-radius,
+   shadow, or filter added on top of that. The figure is given the same
+   fixed width the image is capped at (rather than width: fit-content,
+   which let the caption's own longer text push the box wider than the
+   image -- fit-content sizes to the widest child's preferred width,
+   not specifically the image's), so the caption -- a plain block that
+   fills its parent by default -- wraps within that same width and
+   sits flush with the image's left edge instead of spanning past it.
+   Caption styled like the other panels' .content-source citations
+   (small, muted, no italic default from the browser's
+   figcaption/cite rendering). */
+.digital-garden-figure {
+  margin: 0 0 1.5rem;
+  width: 22rem;
+  max-width: 100%;
+}
+
+.digital-garden-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.digital-garden-figure figcaption {
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  font-style: normal;
+  color: var(--muted);
+}
+
+/* Dialog panel only, not the standalone page: a bit larger (the
+   standalone page stays at the base 22rem cap above) and centered in
+   the panel's own reading column via margin-inline: auto, rather than
+   flush left -- text-align isn't involved, so the paragraphs, headings,
+   and list around it stay left-aligned exactly as everywhere else on
+   the site. */
+.digital-garden-dialog-body .digital-garden-figure {
+  width: 28rem;
+  margin-inline: auto;
+}
+
+/* Image Reduction dialog (Garden Bed 01): same scoped-title pattern as
+   the other panels, plus dialog/standalone-page-shared section styling
+   (mirrors Digital Garden's .digital-garden-dialog-body h3,
+   .digital-garden-page h3 pairing above -- content classes below are
+   reused as-is by both beds/bed-01-image-reduction.html and this
+   dialog, only the panel width is dialog-only).
+
+   Substantially wider than the shared 700px .map-content-dialog
+   default: this panel holds a complete experiment (methods, a
+   reduction-sequence image, three sub-experiments, and related Field
+   Notes) rather than a short reference note, so it needs real room
+   instead of forcing that much content through the same narrow column
+   as Energy/Seed. Everything else -- rounded dashed border, fixed
+   position, header/close button, and the vertical-scrolling
+   .map-content-dialog-body -- stays exactly shared. */
+#image-reduction-dialog.map-content-dialog[open] {
+  width: min(94vw, 960px);
+}
+
+#image-reduction-dialog-title,
+#bed-01-page-title {
+  font-family: "jgs5", monospace;
+}
+
+.image-reduction-dialog-body h3,
+.bed-01-page h3 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.image-reduction-meta {
+  margin: 0.25rem 0 1.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* Dashed rule before DESCRIPTION and RELATED FIELD NOTES only -- the
+   reference marks these two as the panel's major divisions, not every
+   section boundary, so METHODS/GROWN HERE/EXPERIMENTS stay separated
+   by whitespace alone (.dialog-body h3's own margin-top) rather than a
+   rule each. */
+.image-reduction-description-heading,
+.image-reduction-related-heading {
+  padding-top: 1.25rem;
+  border-top: 1px dashed currentColor;
+}
+
+.image-reduction-figure {
+  margin: 1rem 0 1.5rem;
+}
+
+.image-reduction-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.image-reduction-caption {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  font-style: normal;
+  color: var(--muted);
+}
+
+.image-reduction-experiment {
+  margin-top: 1.25rem;
+}
+
+.image-reduction-experiment-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+}
+
+/* Real control, not a decorative label -- styled like the shared
+   .map-content-dialog-close/.energy-source pairing's own restrained
+   bracket language rather than introducing button chrome. */
+.image-reduction-cta {
+  margin: 2rem 0 0;
+}
+
+.image-reduction-greenhouse-cta {
+  display: inline-block;
+  color: inherit;
+}
+
+.image-reduction-related-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.image-reduction-related-list li {
+  margin-bottom: 0.4rem;
+}
+
+.image-reduction-related-list time {
+  color: var(--muted);
+}
+
+@media (max-width: 700px) {
+  .map-content-dialog[open] {
+    width: 100vw;
+    max-height: 100dvh;
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+  }
+}

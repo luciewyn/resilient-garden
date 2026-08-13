@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sketching a Lighter Website · Field Notes · The Resilient Garden</title>
+<link rel="stylesheet" href="../assets/css/garden.css">
+<link rel="icon" type="image/png" href="../assets/cursors/bee.png">
+</head>
+<body>
+<header class="site-header">
+  <a class="ascii-home-link" href="../index.html" aria-label="Return to The Resilient Garden home"><pre class="ascii-home-logo" aria-hidden="true">    *         …
+   \|/   @   -Y-   (O)    @@@
+   \|/  \|/ \\|// \\|//   \|/</pre></a>
+  <nav class="site-nav" aria-label="Main">
+    <ul>
+      <li><a href="../dictionary.html">Dictionary</a></li>
+      <li><a href="index.html" aria-current="page">Field Notes</a></li>
+      <li><a href="../about.html">About</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main class="field-note-page">
+  <p class="breadcrumb"><a href="index.html">← Field Notes</a></p>
+
+  <article class="field-note">
+    <header class="field-note-header">
+      <p class="field-note-number">FIELD NOTE 02</p>
+      <time datetime="2026-03-25">25.03.26</time>
+      <h1>SKETCHING A LIGHTER WEBSITE</h1>
+
+      <p class="field-note-intro">These early experiments explored how the website could remain visually engaging while loading less. Layout, navigation, and image display were tested as parts of a lighter publishing system.</p>
+    </header>
+
+    <dl class="field-note-meta">
+      <div>
+        <dt>Component</dt>
+        <dd>Design &amp; Code</dd>
+      </div>
+      <div>
+        <dt>Status</dt>
+        <dd>Composted</dd>
+      </div>
+    </dl>
+        <figure class="field-note-figure field-note-video-figure">
+      <button type="button" class="field-note-video-trigger" aria-label="Play video">
+        <img src="../assets/image/exp_click.webp" alt="Prototype interface showing one revealed image alongside three still-hidden, dithered thumbnails" loading="lazy" decoding="async">
+        <span class="field-note-video-play" aria-hidden="true">[ PLAY ]</span>
+      </button>
+      <video class="field-note-video" controls playsinline preload="metadata" hidden>
+        <source src="../assets/video/exp_click.mp4" type="video/mp4">
+      </video>
+      <figcaption class="field-note-caption">Images are left unloaded until a visitor chooses to reveal them. This avoids downloading media that may never be viewed and turns loading into a conscious action.</figcaption>
+    </figure>
+
+        <figure class="field-note-figure field-note-video-figure">
+      <button type="button" class="field-note-video-trigger" aria-label="Play video">
+        <img src="../assets/image/exp_energy.webp" alt="Energy and visual degradation prototype interface, showing a low bit-depth image stage" loading="lazy" decoding="async">
+        <span class="field-note-video-play" aria-hidden="true">[ PLAY ]</span>
+      </button>
+      <video class="field-note-video" controls playsinline preload="metadata" hidden>
+        <source src="../assets/video/exp_energy.mp4" type="video/mp4">
+      </video>
+      <figcaption class="field-note-caption">Moving the cursor gradually reduces the image’s resolution and bit depth. Trying to make the relationship between visual quality and energy use visible.</figcaption>
+    </figure>
+
+        <figure class="field-note-figure field-note-video-figure">
+      <button type="button" class="field-note-video-trigger" aria-label="Play video">
+        <img src="../assets/image/exp_load.webp" alt="Interface showing pixel count and system load stress as scattered visual markers" loading="lazy" decoding="async">
+        <span class="field-note-video-play" aria-hidden="true">[ PLAY ]</span>
+      </button>
+      <video class="field-note-video" controls playsinline preload="metadata" hidden>
+        <source src="../assets/video/exp_load.mp4" type="video/mp4">
+      </video>
+      <figcaption class="field-note-caption">The interface translates pixel count and system load into visual signals. As the system works harder, red pixels appear across the screen and the rising stress becomes visible.</figcaption>
+    </figure>
+
+        <figure class="field-note-figure field-note-video-figure">
+      <button type="button" class="field-note-video-trigger" aria-label="Play video">
+        <img src="../assets/image/exp_css.webp" alt="Interface showing pixel count and system load stress as scattered visual markers" loading="lazy" decoding="async">
+        <span class="field-note-video-play" aria-hidden="true">[ PLAY ]</span>
+      </button>
+      <video class="field-note-video" controls playsinline preload="metadata" hidden>
+        <source src="../assets/video/exp_css.mp4" type="video/mp4">
+      </video>
+      <figcaption class="field-note-caption">The animation is made through a small change between two Unicode characters. When a character is clicked, U+2592 ( ▒ ) changes into U+2593 ( ▓ ). Since the characters occupy the same space but have different densities, this little shift makes it appear as a more interactive element.</figcaption>
+    </figure>
+
+  </article>
+
+  <footer class="field-note-nav">
+    <a href="note-01-working-small-together.html">← Previous note</a>
+    <a href="index.html">Field Notes</a>
+    <a href="note-03-small-image.html">Next note →</a>
+  </footer>
+
+</main>
+<script src="../assets/js/image-reveal.js" defer></script>
+<script src="../assets/js/field-note-video.js" defer></script>
+<script src="../assets/js/field-note-media-height.js" defer></script>
+</body>
+</html>

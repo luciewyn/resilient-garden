@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image Reduction · Bed 01 · The Resilient Garden</title>
+<link rel="stylesheet" href="../assets/css/garden.css">
+<link rel="icon" type="image/png" href="../assets/cursors/bee.png">
+</head>
+<body>
+<header class="site-header">
+  <a class="ascii-home-link" href="../index.html" aria-label="Return to The Resilient Garden home"><pre class="ascii-home-logo" aria-hidden="true">    *         …
+   \|/   @   -Y-   (O)    @@@
+   \|/  \|/ \\|// \\|//   \|/</pre></a>
+  <nav class="site-nav" aria-label="Main">
+    <ul>
+      <li><a href="../dictionary.html">Dictionary</a></li>
+      <li><a href="../field-notes/index.html">Field Notes</a></li>
+      <li><a href="../about.html">About</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main class="bed-01-page">
+  <p class="breadcrumb"><a href="../index.html#garden-beds-index">← Garden Beds</a></p>
+  <h1 id="bed-01-page-title">IMAGE REDUCTION</h1>
+
+  <p class="image-reduction-meta">BED 01 ✦ STATUS Growing ✦ DATE PLANTED 14.04.26 ✦ LAST TENDED 09.08.26</p>
+
+  <h3>METHODS</h3>
+  <p>Downsampling, bit-depth reduction, Floyd–Steinberg error diffusion, Bayer ordered dithering, 1-bit image-making</p>
+
+  <h3>GROWN HERE</h3>
+  <p>Greenhouse Image Tool<br>1-bit images for e-ink and thermal print</p>
+
+  <h3 class="image-reduction-description-heading">DESCRIPTION</h3>
+  <p>This bed asks what happens when an image is asked to live with less. The same image is passed through a series of reductions. Its dimensions shrink, its tonal range narrows, and its colours are eventually reduced to black and white. Dithering returns some of the missing detail by rearranging the pixels that remain.</p>
+  <p>The aim is not to find one correct or smallest image. Each reduction is treated as a visual and editorial decision: what remains legible, what disappears, and what new textures begin to grow when less information is available.</p>
+
+  <figure class="image-reduction-figure">
+    <button type="button" class="image-reveal" aria-label="Reveal colour image" aria-pressed="false">
+      <img src="../assets/image/bed01_01.webp" data-bw-src="../assets/image/bed01_01.webp" data-color-src="../assets/image/bed01_colour01.png" alt="Four-stage reduction sequence of the same photograph, from left to right: original, downsampled, reduced tones, dithered." loading="lazy" decoding="async">
+    </button>
+    <figcaption class="image-reduction-caption">Left to right: the original image, downsampled to 64 × 64 px, reduced to 4 tones, and rendered with Floyd–Steinberg / Bayer dithering.</figcaption>
+  </figure>
+
+  <h3>EXPERIMENTS IN THIS BED</h3>
+  <div class="image-reduction-experiment">
+    <p class="image-reduction-experiment-label">01 → DOWNSAMPLING</p>
+    <p>Reducing the number of pixels changes both the size and structure of an image. Details merge, edges become more visible, and individual pixels begin to shape what can be seen.</p>
+  </div>
+  <div class="image-reduction-experiment">
+    <p class="image-reduction-experiment-label">02 → REDUCED BIT DEPTH</p>
+    <p>Limiting the number of available tones removes gradual transitions. The image must carry its information through a much smaller visual vocabulary.</p>
+  </div>
+  <div class="image-reduction-experiment">
+    <p class="image-reduction-experiment-label">03 → DITHERING</p>
+    <p>Floyd–Steinberg error diffusion and Bayer ordered dithering use different arrangements of black and white pixels to suggest tones that are no longer available.</p>
+  </div>
+
+  <p class="image-reduction-cta">
+    <a href="../tools/greenhouse/index.html" class="image-reduction-greenhouse-cta">[ OPEN THE IMAGE TOOL IN THE GREENHOUSE → ]</a>
+  </p>
+
+  <h3 class="image-reduction-related-heading">RELATED FIELD NOTES</h3>
+  <ul class="image-reduction-related-list">
+    <li><time datetime="2026-04-14">14.04.26</time> → <a href="../field-notes/note-03-small-image.html">How Small Can an Image Become?</a></li>
+    <li><time datetime="2026-04-30">30.04.26</time> → <a href="../field-notes/note-04-small-tool-for-smaller-images.html">A Small Tool for Smaller Images</a></li>
+    <li><time datetime="2026-07-28">28.07.26</time> → <a href="../field-notes/note-13-planting-the-garden-in-code.html">Planting the Garden in Code</a></li>
+  </ul>
+</main>
+
+<script src="../assets/js/image-reveal.js" defer></script>
+</body>
+</html>

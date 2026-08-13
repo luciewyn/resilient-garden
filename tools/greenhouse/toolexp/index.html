@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Permacomputing Studio </title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+</head>
+<body>
+
+    <header class="ascii-header">
+        <div class="logo">+========Prototype==========+</div>
+        <div class="hud-display">
+            [ORIGINAL: <span id="hud-orig">0.00KB</span>]
+            [SYSTEM_LOAD: <span id="hud-size">0.00KB</span>] 
+            [SIZE_SAVED: <span id="hud-saved" class="highlight">0%</span>]
+            [POWER_SAVED: <span id="hud-power" class="highlight">0%</span>]
+        </div>
+    </header>
+
+    <main class="ascii-workspace">
+        
+     <aside class="sidebar-left">
+            <div class="section-title">++ TOOLS ++</div>
+            
+            <label class="btn-ascii" for="image-upload">
+                [> IMPORT_IMG ]
+                <input type="file" id="image-upload" accept="image/*" multiple style="display:none;">
+            </label>
+            
+            <div id="file-list" style="margin-top: 10px; display: flex; flex-direction: column; gap: 5px;"></div>
+            <button class="btn-ascii" id="btn-grid">[> GRID_VIEW ]</button>
+            <br> <button class="btn-ascii" id="btn-split">[> SPLIT_VIEW ]</button>
+            <button class="btn-ascii" id="btn-ink">[> INK_SAVER  ]</button>
+            <button class="btn-ascii" id="btn-orig-color">[> ORIG_COLOR ]</button>
+        </aside>
+
+      <section class="canvas-container">
+            <div class="canvas-wrapper" id="single-view">
+                <canvas id="main-canvas"></canvas>
+                <div class="canvas-splitter" style="left: 50%;"></div>
+                <div class="corner-tl">+</div>
+                <div class="corner-tr">+</div>
+                <div class="corner-bl">+</div>
+                <div class="corner-br">+</div>
+            </div>
+
+            <div id="grid-view" style="display: none;"></div>
+        </section>
+
+        <aside class="sidebar-right">
+            <div class="panel-group">
+                <div class="section-title">++ PRESETS ++</div>
+                <div class="presets-grid">
+                    <button class="btn-ascii active">[ GAMEBOY ]</button>
+                    <button class="btn-ascii">[ E-INK   ]</button>
+                    <button class="btn-ascii">[ OLED    ]</button>
+                    <button class="btn-ascii">[ CRT_TV  ]</button>
+                </div>
+            </div>
+
+            <div class="panel-group">
+                <div class="section-title">++ PARAMETERS ++</div>
+                
+                <div class="control-item">
+                    <div class="control-label">
+                        <span>DOWNSAMPLE</span>
+                        <span class="value-display">100%</span>
+                    </div>
+                    <input type="range" min="10" max="100" value="100" class="ascii-slider">
+                </div>
+
+                <div class="control-item">
+                    <div class="control-label">
+                        <span>BIT_DEPTH</span>
+                        <span class="value-display">1-BIT</span>
+                    </div>
+                    <input type="range" min="1" max="8" value="1" class="ascii-slider">
+                </div>
+
+                <div class="control-item">
+                    <div class="control-label">
+                        <span>DITHER_LVL</span>
+                        <span class="value-display">75%</span>
+                    </div>
+                    <input type="range" min="0" max="100" value="75" class="ascii-slider">
+                </div>
+
+                <div class="control-item">
+                    <div class="control-label"><span>ALGORITHM</span></div>
+                    <select class="ascii-select">
+                        <option>> FLOYD_STEINBERG</option>
+                        <option>> BAYER_MATRIX</option>
+                        <option>> RANDOM_NOISE</option>
+                    </select>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <footer class="ascii-footer">
+        <button class="btn-ascii" id="btn-copy-css">[ COPY_CSS ]</button>
+        <button class="btn-ascii" id="btn-print-thermal">[ PRINT ]</button>
+        <button class="btn-ascii highlight-bg" id="btn-download">[ EXPORT_WEBP ]</button>
+    </footer>
+
+</body>
+</html>
