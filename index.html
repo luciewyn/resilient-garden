@@ -6,11 +6,6 @@
 <title>The Resilient Garden</title>
 <link rel="stylesheet" href="assets/css/garden.css">
 <link rel="icon" type="image/png" href="assets/cursors/bee.png">
-<!-- assets/js/ascii-map-scale.js hides .ascii-map-stage (visibility)
-     until its startup sequence applies the map's first real scale, so
-     it never flashes at the wrong size. Without JS, nothing ever adds
-     the body.map-scale-ready class that reveals it again, so this
-     override guarantees a no-JS visitor still sees the map. -->
 <noscript><style>.ascii-map-stage { visibility: visible; }</style></noscript>
 </head>
 <body class="ascii-map-page intro-active">
@@ -130,7 +125,7 @@
 \|/░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░|                    |░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░| IMAGE REDUCTION    |░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░|                    |░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░\|/░░░░░░░░░░░░░░░░░░░
-░░░░░░░░░░░░░░░░░░░░░░░░░░░ how little is enough? ░░░░░░░░░░░░░░░| downsampling       |░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░░░░░░░░░░░░░░ how little is enough? ░░░░░░░░░░░░░░░| downsampling       |░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░| bit depth          |░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░| dithering          |░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░+====================+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -214,6 +209,7 @@
       <a id="image-reduction-trigger-map" class="map-destination image-reduction-map-trigger" href="beds/bed-01-image-reduction.html" aria-label="Open Image Reduction">
         <span class="image-reduction-hit"></span>
       </a>
+      <a id="pressed-edition-trigger-map" class="map-destination pressed-edition-map-trigger" href="pressed-edition.html" aria-label="Open Pressed Edition"></a>
     </div>
     </div>
   </section>
@@ -263,7 +259,11 @@
         Garden has no control over. Observed is the visitor's own
         device clock (see assets/js/observed-time.js), local time, kept
         current -- not the Garden's own hosting/environmental
-        conditions, the same distinction as Device above.
+        conditions, the same distinction as Device above. Energy is a
+        manually authored editorial value (not live, not measured --
+        update data-level by hand), used as the Garden Map's ░
+        background density: see assets/js/ascii-map-density.js and
+        assets/js/ascii-map-interaction.js's applyEnergyDensity().
       -->
       <div class="status-group" id="status-climate">
         <ul>
@@ -271,6 +271,7 @@
           <li class="garden-status-row"><span class="garden-status-label">Images size:</span> <span id="res-images-weight">pending browser measurement</span></li>
           <li class="garden-status-row"><span class="garden-status-label">Mode:</span> <span id="site-mode">unknown</span></li>
           <li class="garden-status-row device-battery-row"><span class="garden-status-label">Device battery:</span> <span id="device-battery-status">unavailable</span></li>
+          <li class="garden-status-row"><span class="garden-status-label">Energy:</span> <span id="garden-energy-level" data-level="100">100%</span></li>
           <li class="garden-status-row"><span class="garden-status-label">Observed:</span> <span id="observed-time">pending browser measurement</span></li>
         </ul>
       </div>
@@ -678,6 +679,7 @@
 <script src="assets/js/entrance.js" defer></script>
 <script src="assets/js/ascii-map-scale.js" defer></script>
 <script src="assets/js/ascii-map-drag.js" defer></script>
+<script src="assets/js/ascii-map-density.js" defer></script>
 <script src="assets/js/ascii-map-interaction.js" defer></script>
 <script src="assets/js/content-panel.js" defer></script>
 <script src="assets/js/image-reveal.js" defer></script>

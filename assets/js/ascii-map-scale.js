@@ -106,6 +106,8 @@
   function buildMarkup(text) {
     var html = "";
     var i = 0;
+    var row = 0; // 0-based; incremented after each newline is appended below
+    var col = 0; // 0-based; reset to 0 after each newline, advanced by every character
     outer: while (i < text.length) {
       for (var l = 0; l < primaryLabels.length; l++) {
         var label = primaryLabels[l];
@@ -117,15 +119,35 @@
             escapeHtmlString(label) +
             "</span>";
           i += label.length;
+          col += label.length;
           continue outer;
         }
       }
       var ch = text[i];
       if (ch === SHADE) {
-        html += '<span class="shade-cell" data-i="' + shadeCells.length + '">' + SHADE + "</span>";
+        // data-row/data-col let assets/js/ascii-map-interaction.js's
+        // energy-density pass (assets/js/ascii-map-density.js) decide
+        // visibility per cell without re-deriving position from scratch.
+        html +=
+          '<span class="shade-cell" data-i="' +
+          shadeCells.length +
+          '" data-row="' +
+          row +
+          '" data-col="' +
+          col +
+          '">' +
+          SHADE +
+          "</span>";
         shadeCells.push(null); // placeholder; filled in after parsing below
+        col++;
       } else {
         html += escapeHtml(ch);
+        if (ch === "\n") {
+          row++;
+          col = 0;
+        } else {
+          col++;
+        }
       }
       i += 1;
     }
@@ -138,6 +160,11 @@
     }
     span.textContent = DARK;
     span.classList.add("is-darkened");
+    // A footprint always overrides energy depletion (assets/js/
+    // ascii-map-interaction.js's applyEnergyDensity()), including one
+    // left after that pass already ran -- clear any stale marker so a
+    // newly-clicked cell in the depleted zone isn't left both.
+    span.classList.remove("is-thinned");
   }
 
   function renderAsciiMap() {

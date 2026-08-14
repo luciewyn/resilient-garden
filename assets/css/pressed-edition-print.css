@@ -1,0 +1,346 @@
+/* Pressed Edition — Web-to-Print
+   Two real A4 landscape sheets, built as HTML/CSS and exported with the
+   browser's native window.print(). No screenshots, no PDF library: what
+   prints is the same markup this stylesheet lays out on screen, just
+   inside a fixed physical page instead of a scrolling one. */
+
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+.pressed-edition {
+  max-width: none;
+  margin: 0;
+  padding: 2rem 1rem 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.print-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.print-button {
+  font-family: var(--mono);
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  font-size: 1rem;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px dashed var(--border);
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  cursor: pointer;
+}
+
+.print-button:hover,
+.print-button:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+.print-note {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Screen preview: two real physical-size sheets (mm units, not vw/vh),
+   so what you see on screen is dimensionally the same page that
+   prints -- just wrapped in an overflow-x:auto strip for viewports
+   narrower than one A4-landscape-wide sheet, rather than rescaling
+   the sheet itself (which would break the "physical units" premise
+   for anyone measuring against the screen). .print-preview-label and
+   .print-sheet-scroll are direct children of .print-preview, with no
+   per-sheet wrapper div; label-to-sheet spacing is done with margin
+   instead of a shared wrapper's gap (see .print-preview-label below). */
+.print-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.print-preview-label {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  margin: 0;
+}
+
+.print-preview-label:not(:first-child) {
+  margin-top: 2.4rem;
+}
+
+.print-sheet-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* margin: 0 overrides garden.css's sitewide "main section { margin: 2rem
+   0; }" rule -- .print-sheet is a <section> inside <main>, so without this
+   it silently gained 32px top+bottom margin, pushing each 210mm sheet's
+   box past the physical page height and causing Chromium's print pipeline
+   to fragment a blank continuation page after every sheet. Confirmed by
+   direct measurement (getComputedStyle) after every other fix (Grid vs
+   Flex, wrapper nesting depth) failed to change the page count. */
+.print-sheet {
+  width: 297mm;
+  height: 210mm;
+  margin: 0;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: #fff;
+  color: #000;
+}
+
+.print-sheet-front {
+  break-after: page;
+}
+
+/* Screen-only boundary so the sheet edges read clearly against the
+   page background -- explicitly removed under @media print below. */
+.print-sheet-scroll .print-sheet {
+  border: 1px dashed var(--border);
+}
+
+/* PAGE 1 — CONTENT: an 8-panel print composition (4 columns x 2 rows,
+   each 74.25mm x 105mm), not a top-to-bottom flow of paragraphs -- see
+   .sheet-panel below for the individual regions. Dashed panel edges
+   double as fold/cut guides for the physical zine. */
+.sheet-grid {
+  display: flex;
+  flex-wrap: wrap;
+  width: 297mm;
+  height: 210mm;
+}
+
+.sheet-panel {
+  box-sizing: border-box;
+  width: 74.25mm;
+  height: 105mm;
+  padding: 5mm 4mm;
+  border-right: 1px dashed #999;
+  border-bottom: 1px dashed #999;
+  font-family: "jgs7", monospace;
+  font-size: 7.5pt;
+  line-height: 1.35;
+  overflow: hidden;
+}
+
+.sheet-panel:nth-child(4n) {
+  border-right: none;
+}
+
+.sheet-panel:nth-child(n + 5) {
+  border-bottom: none;
+}
+
+.sheet-panel-title {
+  margin: 0 0 2mm;
+  font-family: "jgs7", monospace;
+  font-weight: normal;
+  font-size: 11pt;
+  letter-spacing: 0.02em;
+}
+
+.sheet-panel-meta {
+  margin: 0 0 4mm;
+  font-size: 7.5pt;
+  color: #333;
+}
+
+.sheet-panel p {
+  margin: 0 0 2.5mm;
+}
+
+.sheet-panel p:last-child {
+  margin-bottom: 0;
+}
+
+.sheet-mark {
+  font-family: "jgs7", monospace;
+  display: block;
+  margin: 1mm 0;
+}
+
+.sheet-image-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+}
+
+.sheet-image-panel img {
+  width: 100%;
+  height: 62mm;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.05);
+  display: block;
+}
+
+.sheet-image-caption {
+  font-size: 6.5pt;
+  line-height: 1.3;
+  color: #333;
+  margin: 0;
+}
+
+.sheet-closing-panel .sheet-qr {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  margin: 3mm 0;
+}
+
+.sheet-closing-panel .sheet-qr img {
+  width: 18mm;
+  height: 18mm;
+  display: block;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.sheet-credits {
+  font-size: 7pt;
+  line-height: 1.4;
+  color: #333;
+}
+
+.sheet-credits p {
+  margin: 0;
+}
+
+/* PAGE 2 — GARDEN MAP: the same authoritative ASCII source as the
+   interactive map, with the visitor's current ░->▓ marks replayed on
+   top of it (assets/js/pressed-edition-print.js fetches index.html's
+   .ascii-garden-map for the base text, reads the same localStorage
+   record the live map's marks are saved to, and reconstructs the map
+   exactly as it currently stands for this visitor -- also trimming
+   everything from [ HARVEST ] onward, print-side only), rendered as
+   plain monospace text -- no hotspots, cursor, Map Index, Garden
+   Status, header, or dialogs, because none of those exist in that
+   reconstruction to begin with.
+
+   This is a full-bleed crop, not a "fit the whole map" composition:
+   the map is deliberately scaled LARGER than the printable area and
+   centered, so it fills the sheet edge-to-edge and the surrounding
+   ASCII (garden fauna, background marks, etc.) is cropped away by
+   .print-sheet-back / .print-map-rotated's overflow: hidden rather
+   than shrunk to fit. Do not lower the scale below what's needed for
+   full coverage just because peripheral content gets clipped -- that
+   clipping is the intended composition, not a bug.
+
+   The map reads top-to-bottom (portrait), but the sheet is A4
+   landscape, so the map is rotated -90deg to fill the sheet -- the
+   paper itself stays landscape; only the map content turns. The
+   rotation trick: .print-map-rotated is sized as a portrait canvas
+   (210mm x 297mm, i.e. the landscape sheet's dimensions swapped),
+   centered on the sheet, then rotated -90deg -- after rotating, its
+   own footprint exactly covers the 297mm x 210mm sheet. */
+.print-sheet-back {
+  display: block;
+  position: relative;
+  width: 297mm;
+  height: 210mm;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.print-map-rotated {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 210mm;
+  height: 297mm;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  transform-origin: center center;
+}
+
+/* Base size at font-size: 1mm measures ~100mm wide (200 cols x 0.5mm --
+   jgs7's cell is a fixed 0.5em/1em box, see garden.css) and shrinks in
+   height as Harvest rows get trimmed above. scale(2.4) grows the width
+   alone to 240mm, already past the 210mm portrait-canvas width above --
+   the binding dimension for full-bleed coverage -- so no part of the
+   canvas is left unfilled. Raise this value (2.5, 2.6, ...) if a visual
+   check ever shows a white sliver on any edge; do not lower it to make
+   more of the map fit. break-inside: avoid keeps this block from
+   fragmenting across print pages (unrelated to the intentional visual
+   overflow past the sheet edges, which is just clipped by the ancestor
+   overflow: hidden above). */
+.print-garden-map {
+  width: fit-content;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  font-family: "jgs7", monospace;
+  font-variant-ligatures: none;
+  letter-spacing: 0;
+  line-height: 1;
+  font-size: 1mm;
+  color: #000;
+  transform: scale(2.4);
+  transform-origin: center center;
+}
+
+.print-garden-map-row {
+  white-space: pre;
+}
+
+.print-map-fallback {
+  font-family: var(--mono);
+  font-size: 9pt;
+  color: #333;
+  text-align: center;
+  padding: 0 20mm;
+  margin: 0;
+}
+
+@media print {
+  .site-header,
+  .breadcrumb,
+  .provisional-note,
+  .visually-hidden,
+  .print-controls,
+  .print-preview-label {
+    display: none !important;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  .pressed-edition {
+    padding: 0;
+    gap: 0;
+    display: block;
+  }
+
+  .print-preview,
+  .print-sheet-scroll {
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+
+  .print-sheet-scroll .print-sheet {
+    border: none;
+  }
+
+  .print-map-fallback {
+    display: none;
+  }
+}

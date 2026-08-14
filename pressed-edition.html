@@ -5,11 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pressed Edition · The Resilient Garden</title>
 <link rel="stylesheet" href="assets/css/garden.css">
+<link rel="stylesheet" href="assets/css/pressed-edition-print.css">
 <link rel="icon" type="image/png" href="assets/cursors/bee.png">
 </head>
 <body>
 <header class="site-header">
-  <a class="site-title" href="index.html">The Resilient Garden</a>
+  <a class="ascii-home-link" href="index.html" aria-label="Return to The Resilient Garden home"><pre class="ascii-home-logo" aria-hidden="true">    *         …
+   \|/   @   -Y-   (O)    @@@
+   \|/  \|/ \\|// \\|//   \|/</pre></a>
   <nav class="header-nav" aria-label="Main">
     <a href="dictionary.html" class="ascii-nav-link"><pre class="ascii-nav-art" aria-hidden="true"><span class="ascii-nav-mark"> @</span>
 <span class="ascii-nav-mark">\|/</span>  Dictionary  <span class="ascii-nav-mark">\|/</span></pre><span class="visually-hidden">Dictionary</span></a>
@@ -20,12 +23,92 @@
   </nav>
 </header>
 
-<main>
-  <p class="breadcrumb"><a href="index.html#afterlife">← Afterlife</a></p>
-  <h1>Pressed Edition</h1>
-  <p>The Pressed Edition translates mature garden-bed experiments into printed form — the only place in the garden where "finished" is a meaningful status.</p>
-  <p class="provisional-note">Not yet planted. No bed has reached Pressed status yet.</p>
+<main class="pressed-edition">
+  <p class="breadcrumb"><a href="index.html#afterlife">← Garden Map</a></p>
+  <h1 class="visually-hidden">Pressed Edition — Web-to-Print</h1>
+  <p class="provisional-note">First version of the Web-to-Print system. This establishes the 2-page print architecture; the panel composition below is a first pass, not a final design.</p>
+
+  <div class="print-controls">
+    <button type="button" id="print-pressed-edition" class="print-button">[ PRINT / SAVE PDF ]</button>
+    <p class="print-note">A4 · 2 sides · print at 100% · margins: none · background graphics: on</p>
+  </div>
+
+  <div class="print-preview">
+
+    <p class="print-preview-label">[ PAGE 1 — CONTENT ]</p>
+    <div class="print-sheet-scroll">
+      <section class="print-sheet print-sheet-front" aria-label="Pressed Edition, page 1: content">
+        <div class="sheet-grid">
+
+            <div class="sheet-panel sheet-title-panel">
+              <p class="sheet-panel-title">Pressed Edition No.1</p>
+              <p class="sheet-panel-meta">09.08.2026 · Basel</p>
+              <span class="sheet-mark" aria-hidden="true">\|/</span>
+              <span class="sheet-mark" aria-hidden="true">\|/</span>
+              <span class="sheet-mark" aria-hidden="true">\|/</span>
+            </div>
+
+            <div class="sheet-panel">
+              <p>A webpage can feel light, almost immaterial. Yet even the smallest image arrives through a chain of energy, storage, software, cables and screens.</p>
+              <p>The Resilient Garden began by paying attention to this chain; what it needs, and how it might become visible within a publication.</p>
+            </div>
+
+            <div class="sheet-panel">
+              <p>The first materials were already close at hand: hand-written HTML, small image files, an old Kindle, a portable solar battery and a thermal printer.</p>
+              <p>As they were brought together, their limits began to shape the rhythm. Images became smaller. Old screens left traces. Changes in sunlight affected what the garden could do. These conditions became part of its form and rhythm.</p>
+            </div>
+
+            <div class="sheet-panel sheet-image-panel">
+              <img src="assets/image/bed01_01.webp" alt="Four-stage reduction sequence of the same photograph, from left to right: original, downsampled, reduced tones, dithered.">
+              <p class="sheet-image-caption">Garden Bed 01 — Image Reduction: original, downsampled, reduced tones, dithered.</p>
+            </div>
+
+            <div class="sheet-panel">
+              <p>Inside the Greenhouse, an image is asked to travel lightly. Its resolution is lowered. Colour is reduced. Dithering rebuilds the missing tones from small arrangements of pixels.</p>
+              <p>The process is partly subtraction and partly translation. Some details fall away. Others become unexpectedly clear. New textures appear where the smooth image used to be.</p>
+            </div>
+
+            <div class="sheet-panel">
+              <p>On the Kindle, slow refresh allows parts of an earlier image to remain. One screen quietly settles on top of another.</p>
+              <p>The thermal printer translates the same pixels through heat. Fine lines may disappear, while darker areas gather on the surface of the paper. Each device leaves its own reading of the image: a delay, a shadow, a softened edge or an uneven mark.</p>
+            </div>
+
+            <div class="sheet-panel">
+              <p>Some parts of the garden are powered through a portable solar battery. Its rhythm changes with the weather. When energy is plentiful, images can move and tools stay awake. When the sky remains cloudy, the garden begins to slow down.</p>
+              <p>Files become lighter. Movement is reduced. Some parts wait quietly until more energy arrives. The weather does not stay outside the publication. It enters the way the garden appears and behaves.</p>
+            </div>
+
+            <div class="sheet-panel sheet-closing-panel">
+              <p>Open it out! Unfold the paper to find the garden map on the other side.</p>
+              <p>Follow the map online, or fold it back and take this small harvest with you. The garden is still growing.</p>
+              <div class="sheet-qr">
+                <img src="assets/image/qr-code.png" alt="QR code linking to The Resilient Garden">
+              </div>
+              <div class="sheet-credits">
+                <p>Cultivated by Lucie (Wan-Yun) Lin</p>
+                <p>HGK Basel FHNW</p>
+                <p>August 2026</p>
+              </div>
+            </div>
+
+        </div>
+      </section>
+    </div>
+
+    <p class="print-preview-label">[ PAGE 2 — GARDEN MAP ]</p>
+    <div class="print-sheet-scroll">
+      <section class="print-sheet print-sheet-back" aria-label="Pressed Edition, page 2: Garden Map poster">
+        <div class="print-map-rotated">
+          <div class="print-garden-map" id="print-garden-map" aria-hidden="true"></div>
+        </div>
+        <p class="print-map-fallback" id="print-map-fallback">The Garden Map loads here from the live Garden Map page. This needs JavaScript; if it stays empty, open <a href="index.html">the Garden Map</a> once in this browser, then reload this page.</p>
+      </section>
+    </div>
+
+  </div>
 </main>
 
+<script src="assets/js/ascii-map-density.js" defer></script>
+<script src="assets/js/pressed-edition-print.js" defer></script>
 </body>
 </html>

@@ -927,6 +927,8 @@ body.intro-active:not(:has(#garden-map:target)) .map-index {
 .ascii-map-stage.is-dragging .digital-garden-map-trigger,
 .ascii-map-frame.is-dragging .image-reduction-hit,
 .ascii-map-stage.is-dragging .image-reduction-hit,
+.ascii-map-frame.is-dragging .pressed-edition-map-trigger,
+.ascii-map-stage.is-dragging .pressed-edition-map-trigger,
 .ascii-map-frame.is-dragging .shade-cell,
 .ascii-map-stage.is-dragging .shade-cell,
 .ascii-map-frame.is-dragging .shade-cell.is-darkened,
@@ -1001,7 +1003,8 @@ body.intro-active:not(:has(#garden-map:target)) .map-index {
 .community-map-trigger,
 .screen-materiality-map-trigger,
 .digital-garden-map-trigger,
-.image-reduction-hit {
+.image-reduction-hit,
+.pressed-edition-map-trigger {
   cursor:
     url("../cursors/ascii-bee-orange-clear.png") 38 23,
     pointer;
@@ -1180,7 +1183,8 @@ body.map-scale-ready .ascii-map-stage {
 .community-map-trigger,
 .screen-materiality-map-trigger,
 .digital-garden-map-trigger,
-.image-reduction-map-trigger {
+.image-reduction-map-trigger,
+.pressed-edition-map-trigger {
   z-index: var(--z-map-destinations);
 }
 
@@ -1396,6 +1400,32 @@ body.map-scale-ready .ascii-map-stage {
 }
 
 .soil-map-trigger:focus-visible {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+/* Pressed Edition trigger: same single-plain-anchor pattern as Soil
+   above -- one unbroken run of text, no sub-regions to carve out.
+
+   Coordinates measured directly from the generated ASCII map text in
+   index.html (same row-is-0-indexed-from-the-<pre>, 1 row == 1em,
+   1 column == 1ch system used above): row 148, columns 99-115
+   ("Pressed Edition →", 17 characters including the arrow), flanked
+   by the HARVEST box's plain ░ interior and border on both sides
+   (rows 147 and 149 are blank/border in this column range) -- the
+   hotspot covers exactly the label and nothing more. */
+.pressed-edition-map-trigger {
+  position: absolute;
+  left: 99ch;
+  top: 148em;
+  width: 17ch;
+  height: 1em;
+  display: block;
+  background: transparent;
+  -webkit-user-drag: none;
+}
+
+.pressed-edition-map-trigger:focus-visible {
   outline: 1px dashed var(--fg);
   outline-offset: 1px;
 }

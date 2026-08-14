@@ -1,13 +1,15 @@
 // Progressive enhancement only: without this script the map stays fully
-// readable with no ░ -> ▓ interaction lost except this decorative one.
+// readable with no ░ -> ▓ interaction lost except this decorative one,
+// and simply shows full ░ density (see applyEnergyDensity() below).
 //
 // The actual markup (.shade-cell spans, .map-primary-label spans) is
 // built by assets/js/ascii-map-scale.js instead of here, as the first
 // step of its one authoritative render -> fonts -> layout -> scale
-// startup sequence -- see that file for why. This script only adds
+// startup sequence -- see that file for why. This script adds
 // click/drag interaction and persisted-mark storage on top of the spans
-// it exposes via window.AsciiMapRender, so it has to load after that
-// script (see the <script> order in index.html).
+// it exposes via window.AsciiMapRender, plus the energy-driven ░
+// density pass (assets/js/ascii-map-density.js), so it has to load
+// after both of those scripts (see the <script> order in index.html).
 (function () {
   var map = document.querySelector(".ascii-garden-map");
   var frame = document.querySelector(".ascii-map-frame");
@@ -19,6 +21,8 @@
 
   var STORAGE_KEY = "resilient-garden:ascii-map-marks";
   var DRAG_THRESHOLD = 5; // px -- matches assets/js/ascii-map-drag.js
+  var SHADE = "░";
+  var DARK = "▓";
 
   var shadeCells = renderer.shadeCells;
   var darken = renderer.darken;
@@ -47,6 +51,53 @@
     }
     for (var i = 0; i < data.marks.length; i++) {
       darken(shadeCells[data.marks[i]]);
+    }
+  }
+
+  // Applied once, after loadMarks() above -- energy is a static
+  // authored number (Garden Status's Energy field), not something that
+  // changes without a reload, so there's nothing to re-run this on.
+  // Depletes the field right-to-left (a column cutoff derived from
+  // energy and the map's own width, roughened per row by a seeded
+  // random walk into an irregular terrain-like edge), not row-by-row
+  // striping. Applies to EVERY cell, darkened (footprint) or not: a
+  // footprint past its row's cutoff is hidden along with the
+  // background, not exempted -- math shared with the Pressed Edition
+  // print reconstruction: see assets/js/ascii-map-density.js.
+  function applyEnergyDensity() {
+    if (!window.AsciiMapDensity) {
+      return; // shared density math not loaded -- leave the map at full density
+    }
+
+    var energyEl = document.getElementById("garden-energy-level");
+    var energyPercent = 100;
+    if (energyEl) {
+      var level = Number(energyEl.getAttribute("data-level"));
+      if (!isNaN(level)) {
+        energyPercent = level;
+      }
+    }
+
+    // map.textContent walks every text node in document order regardless
+    // of the .shade-cell/.map-primary-label spans wrapping them, so this
+    // is exactly the original authored map text -- same source the
+    // Pressed Edition reconstruction computes maxCol/rowCount from.
+    var mapText = map.textContent;
+    var maxCol = window.AsciiMapDensity.computeMaxCol(mapText);
+    var rowCount = mapText.split("\n").length;
+    var terrainOffsets = window.AsciiMapDensity.buildTerrainOffsets(rowCount);
+
+    for (var i = 0; i < shadeCells.length; i++) {
+      var cell = shadeCells[i];
+      if (!cell) {
+        continue;
+      }
+      var col = Number(cell.getAttribute("data-col"));
+      var row = Number(cell.getAttribute("data-row"));
+      var visible = window.AsciiMapDensity.isColumnVisible(col, row, maxCol, energyPercent, terrainOffsets);
+      var isDarkened = cell.classList.contains("is-darkened");
+      cell.textContent = visible ? (isDarkened ? DARK : SHADE) : " ";
+      cell.classList.toggle("is-thinned", !visible);
     }
   }
 
@@ -79,6 +130,7 @@
   }
 
   loadMarks();
+  applyEnergyDensity();
 
   // Click-vs-drag: assets/js/ascii-map-drag.js calls frame.setPointerCapture()
   // on pointerdown, which retargets subsequent pointermove/pointerup
