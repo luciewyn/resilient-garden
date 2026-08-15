@@ -668,6 +668,16 @@ label[for="image-upload"]:focus-visible {
     padding: 6px 12px;
 }
 
+/* Restrained text confirmation after [ ADD TO PRESSED EDITION ] --
+   no toast, no modal, no animation, just this label appearing next to
+   the button (see tools/greenhouse/script.js). */
+.pressed-edition-add-status {
+    align-self: center;
+    font-family: 'DepartureMono', monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
 /* ==========================================
    13. Desktop layout
    ========================================== */

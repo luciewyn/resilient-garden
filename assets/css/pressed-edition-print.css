@@ -114,64 +114,204 @@
   border: 1px dashed var(--border);
 }
 
-/* PAGE 1 — CONTENT: an 8-panel print composition (4 columns x 2 rows,
-   each 74.25mm x 105mm), not a top-to-bottom flow of paragraphs -- see
-   .sheet-panel below for the individual regions. Dashed panel edges
-   double as fold/cut guides for the physical zine. */
-.sheet-grid {
-  display: flex;
-  flex-wrap: wrap;
-  width: 297mm;
-  height: 210mm;
+/* PAGE 1 — CONTENT: a true one-sheet, 8-page zine imposition, not a
+   plain left-to-right reading-order grid. The 8 editorial pages (1 =
+   front cover, 8 = back cover/closing info, 2-7 = internal pages, in
+   that authored reading order -- see pressed-edition.html, where the
+   prose itself is untouched) are placed into this 4-column x 2-row,
+   74.25mm x 105mm grid in IMPOSITION order:
+     top row:    1 / 8 / 7 / 6  (each rotated 180deg)
+     bottom row: 2 / 3 / 4 / 5  (upright)
+   so that once printed duplex, cut along the one centre cut line, and
+   folded into a small booklet, the pages read 1 through 8 in order.
+   CSS Grid auto-places items in DOM order, row by row -- so the DOM
+   order in pressed-edition.html (zine-page-1, -8, -7, -6, -2, -3, -4,
+   -5) directly controls which editorial page lands in which physical
+   grid cell; nothing here reorders the prose itself, only its print
+   position.
+
+   No per-panel borders: the imposition should read as one clean sheet,
+   not a grid of eight bordered tiles. The only physical cut this sheet
+   actually needs is the single horizontal line between the two rows
+   (see .zine-cut-line below) -- there's no matching cut between
+   columns, since the fold/trim for a one-sheet 8-page zine happens
+   along that one line plus the eventual centre spine fold, not a full
+   crosshatch of guides. */
+.print-sheet-front {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 74.25mm);
+  grid-template-rows: repeat(2, 105mm);
+  /* The one shared page inset every zine page reads text within --
+     .zine-page's own padding below, and PAGE 5's image frame, both
+     read these same two values so the image area lines up with the
+     text column edges on neighbouring pages rather than using a
+     second, arbitrary margin. */
+  --zine-page-padding-y: 5mm;
+  --zine-page-padding-x: 4mm;
 }
 
-.sheet-panel {
+.zine-page {
+  position: relative;
   box-sizing: border-box;
   width: 74.25mm;
   height: 105mm;
-  padding: 5mm 4mm;
-  border-right: 1px dashed #999;
-  border-bottom: 1px dashed #999;
+  padding: var(--zine-page-padding-y) var(--zine-page-padding-x);
   font-family: "jgs7", monospace;
-  font-size: 7.5pt;
-  line-height: 1.35;
+  font-size: 8pt;
+  line-height: 1.5;
   overflow: hidden;
 }
 
-.sheet-panel:nth-child(4n) {
-  border-right: none;
+/* Base artwork for each panel (assets/zine/N.jpg) -- an <img>, not a
+   background-image, so it prints reliably and .zine-page's own
+   overflow: hidden crops it the same way it crops everything else.
+   inset: 0 fills from the panel's own padding box (i.e. edge to edge,
+   ignoring .zine-page's text padding -- the artwork is meant to bleed
+   full-panel, only the dynamic content above it respects the margin).
+   z-index: 0 with dynamic content elsewhere given z-index: 1 keeps the
+   stacking order artwork-below-content explicit rather than relying
+   on DOM order alone. No rotation of its own: it's a plain child of
+   .zine-page-1/-8/-7/-6, so the existing rotate(180deg) on those
+   carries the image and the page's real content together.
+
+   Two classes (.zine-page .zine-page-artwork), not one -- PAGE 4's
+   panel also carries .sheet-image-panel, and .sheet-image-panel img
+   further down (a fixed 62mm height + greyscale filter, left over
+   from an earlier design) is otherwise more specific than a bare
+   .zine-page-artwork class and would silently win. */
+.zine-page .zine-page-artwork {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
 }
 
-.sheet-panel:nth-child(n + 5) {
-  border-bottom: none;
+/* The one physical cutting instruction on this sheet: a single
+   horizontal dashed line in the exact centre of the A4 sheet (y =
+   105mm), spanning only the middle two columns (x = 74.25mm to
+   222.75mm, i.e. 148.5mm long -- between pages 1/2 and 6/5, through
+   the seam between pages 8-3 and 7-4). A dedicated absolutely-
+   positioned element, not a panel border, since no single panel edge
+   corresponds to this line (it's a sheet-wide cut mark, not a page
+   boundary) -- and unlike the screen-only page-number badges below,
+   this genuinely belongs in the printed PDF: it's the physical cutting
+   guide for assembling the zine, not a verification aid. */
+.zine-cut-line {
+  position: absolute;
+  left: 74.25mm;
+  top: 105mm;
+  width: 148.5mm;
+  border-top: 0.25mm dashed #000;
+  z-index: 10;
+  pointer-events: none;
 }
 
-.sheet-panel-title {
-  margin: 0 0 2mm;
+/* Rotates the COMPLETE top-row page -- text, images, ASCII marks, QR
+   code, everything inside it together -- rather than reversing any
+   content by hand, so the imposed sheet reads correctly once the
+   physical page is turned upside down while folding. */
+.zine-page-1,
+.zine-page-8,
+.zine-page-7,
+.zine-page-6 {
+  transform: rotate(180deg);
+}
+
+/* Screen-only verification aid: a small page-number badge in the
+   corner of each panel (upside-down on the rotated top row, same as
+   the rest of that panel's content -- still legible enough to confirm
+   1/8/7/6 at a glance). Never printed: @media print simply doesn't
+   match these rules, so there's nothing to explicitly hide. */
+@media screen {
+  .zine-page {
+    position: relative;
+  }
+
+  .zine-page::after {
+    position: absolute;
+    top: 1mm;
+    right: 1mm;
+    font-family: var(--mono);
+    font-size: 6pt;
+    color: #c00;
+    opacity: 0.55;
+  }
+
+  .zine-page-1::after {
+    content: "1";
+  }
+
+  .zine-page-2::after {
+    content: "2";
+  }
+
+  .zine-page-3::after {
+    content: "3";
+  }
+
+  .zine-page-4::after {
+    content: "4";
+  }
+
+  .zine-page-5::after {
+    content: "5";
+  }
+
+  .zine-page-6::after {
+    content: "6";
+  }
+
+  .zine-page-7::after {
+    content: "7";
+  }
+
+  .zine-page-8::after {
+    content: "8";
+  }
+}
+
+/* PAGE 1 — COVER: title + copy/date sit as one centred colophon block
+   near the bottom of the panel, over the artwork -- not at the top,
+   not spread across the page. left/right: 0 spans the full panel
+   width so text-align: center centres against the panel, not just
+   the block's own content width. position/z-index keep the whole
+   block stacked above .zine-page-artwork explicitly, not just by
+   luck of DOM order. */
+.zine-cover-colophon {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10mm;
+  z-index: 1;
+  text-align: center;
+}
+
+.zine-cover-edition {
+  margin: 0 0 1mm;
   font-family: "jgs7", monospace;
   font-weight: normal;
-  font-size: 11pt;
-  letter-spacing: 0.02em;
+  font-size: 9pt;
+  letter-spacing: 0.03em;
 }
 
-.sheet-panel-meta {
-  margin: 0 0 4mm;
-  font-size: 7.5pt;
-  color: #333;
+.zine-cover-copy {
+  margin: 0;
+  font-family: "jgs7", monospace;
+  font-size: 8pt;
 }
 
-.sheet-panel p {
+.zine-page p {
   margin: 0 0 2.5mm;
 }
 
-.sheet-panel p:last-child {
+.zine-page p:last-child {
   margin-bottom: 0;
-}
-
-.sheet-mark {
-  font-family: "jgs7", monospace;
-  display: block;
-  margin: 1mm 0;
 }
 
 .sheet-image-panel {
@@ -188,36 +328,273 @@
   display: block;
 }
 
-.sheet-image-caption {
-  font-size: 6.5pt;
-  line-height: 1.3;
-  color: #333;
+/* PAGE 4 — IMAGE DATA: the real Greenhouse metadata for whichever
+   image PAGE 5 is currently showing (assets/js/pressed-edition-
+   print.js's renderPressedEditionImageData(), fed by the same resolved
+   record renderPressedEditionImage() uses for PAGE 5 itself -- one
+   resolution, two pages, never out of sync). Hidden by that script
+   until a record actually exists, so this never shows during the
+   placeholder state. A plain label/value list, not a settings panel:
+   no borders around individual rows, no icons, no colour -- just the
+   dashed rule already used elsewhere in this sheet to separate a
+   caption from what follows it. */
+.image-data {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  padding-top: 2mm;
+  border-top: 1px dashed currentColor;
+}
+
+.image-data[hidden] {
+  display: none;
+}
+
+.image-data-title {
+  margin: 0 0 1.5mm;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.image-data-list {
   margin: 0;
 }
 
-.sheet-closing-panel .sheet-qr {
+.image-data-row {
   display: flex;
-  align-items: center;
+  justify-content: space-between;
   gap: 3mm;
-  margin: 3mm 0;
 }
 
-.sheet-closing-panel .sheet-qr img {
-  width: 18mm;
-  height: 18mm;
+.image-data-row dt,
+.image-data-row dd {
+  margin: 0;
+  font-weight: normal;
+}
+
+.image-data-row dd {
+  text-align: right;
+}
+
+/* PAGE 5 — GREENHOUSE IMAGE: connects the existing Greenhouse tool's
+   output to this panel rather than a second image system. See
+   assets/js/pressed-edition-print.js's renderPressedEditionImage() for
+   how the source is resolved (sessionStorage selection from Greenhouse
+   or a chosen default -- both live in the same storage slot -- else
+   the placeholder below). This stylesheet only lays out whichever one
+   that resolves to.
+
+   PAGE 5 is a PERSISTENT EDITING SURFACE on screen, not a page that
+   flips to a plain image once one is resolved: the light-grey
+   background and the two controls (OPEN IN GREENHOUSE / USE DEFAULT
+   IMAGE) stay visible on screen regardless of whether an image is
+   showing -- now as a centred OVERLAY on top of the (dimmed) image or
+   placeholder, rather than living below it. Only in print does it
+   become a plain white, image-only page -- see the @media print
+   overrides below.
+
+   .pressed-edition-image-frame is the fixed 66.25mm x 95mm box, inset
+   from the panel by the SAME --zine-page-padding-y/-x every other
+   zine page uses for its text. .pressed-edition-image-stage fills it
+   completely and is the positioned container for THREE stacked
+   layers, each screen-only except the image/placeholder itself:
+     1. the image or the placeholder (z-index 1)
+     2. a dimming layer, ::after (z-index 2, screen only)
+     3. the two controls, absolutely centred (z-index 3, screen only)
+   Because the controls are an overlay (not a sibling taking flex
+   space the way an earlier version had them), the stage is a plain
+   fixed-size box again -- the rotated-image sizing below can go back
+   to a compile-time calc(), the same technique PAGE 2's Garden Map
+   poster (.print-map-rotated) uses, with no JS measurement needed. */
+@media screen {
+  .zine-page-5 {
+    background: #f2f2f2;
+  }
+}
+
+@media print {
+  .zine-page-5 {
+    background: #fff !important;
+  }
+}
+
+.pressed-edition-image-frame {
+  position: absolute;
+  inset: var(--zine-page-padding-y) var(--zine-page-padding-x);
+}
+
+.pressed-edition-image-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Default (portrait/square, unrotated): fits naturally inside the
+   stage at its own aspect ratio, never cropped -- object-fit: contain,
+   not cover, so nothing of the image is lost regardless of how its
+   proportions compare to the stage's. */
+.pressed-edition-image {
   display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
 
-.sheet-credits {
-  font-size: 7pt;
-  line-height: 1.4;
-  color: #333;
+/* An author display:block declaration otherwise wins over the
+   user-agent's own [hidden] { display: none } (author rules beat
+   user-agent rules at equal-or-lower specificity, regardless of
+   source order) -- without this, toggling the hidden attribute in
+   assets/js/pressed-edition-print.js would have no visual effect. */
+.pressed-edition-image[hidden] {
+  display: none;
 }
 
-.sheet-credits p {
-  margin: 0;
+/* Landscape source, rotated by assets/js/pressed-edition-print.js
+   (assigned only after checking the image's actual naturalWidth/
+   naturalHeight -- see classifyOrientation() there). max-width/height
+   are the STAGE's own dimensions swapped -- the pre-rotation bounding
+   box a landscape image is fit into -- so that once rotated, its
+   footprint fits back inside the portrait stage the same way PAGE 2's
+   poster fits its sheet. Flex centering on the stage keeps this
+   centred through the rotation, the same way translate(-50%,-50%)
+   centring survives a rotate() in the PAGE 2 technique. */
+.pressed-edition-image.is-landscape-rotated {
+  max-width: calc(105mm - 2 * var(--zine-page-padding-y));
+  max-height: calc(74.25mm - 2 * var(--zine-page-padding-x));
+  transform: rotate(90deg);
+}
+
+/* Occupies the same box the image fills. Restrained dashed outline +
+   a single [ IMAGE ] label, no upload/cloud iconography -- editorial
+   notation, not a browser-style drop zone. The label sits near the
+   TOP of the frame rather than dead-centre: .pressed-edition-image-
+   controls below is also centred in this exact same box, and two
+   independently-centred elements in one box collide -- the controls
+   are the intended visual focus while the placeholder is showing, so
+   the label is offset up and out of their way rather than competing
+   for the same point. Only shown when nothing has resolved yet
+   (assets/js/pressed-edition-print.js toggles its hidden attribute);
+   hard-hidden in print below regardless, since printing auto-resolves
+   to the default first wherever possible (see
+   resolvePressedEditionImageForPrint() there) -- if that still leaves
+   nothing resolved (no default configured), the panel prints blank
+   rather than showing this on-screen cue. */
+.pressed-edition-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8mm;
+  border: 1px dashed currentColor;
+  font-family: "jgs7", monospace;
+  font-size: 7.5pt;
+  box-sizing: border-box;
+}
+
+.pressed-edition-image-placeholder[hidden] {
+  display: none;
+}
+
+@media print {
+  .pressed-edition-image-placeholder {
+    display: none !important;
+  }
+}
+
+@media screen {
+  /* Image and placeholder both sit above the dimming layer's own
+     stacking position (they're painted first in DOM order regardless,
+     but an explicit z-index keeps this robust against reordering) --
+     the SAME dim applies to either, so the placeholder reads as
+     subdued/waiting the same way a selected image does. */
+  .pressed-edition-image-stage img,
+  .pressed-edition-image-stage .pressed-edition-image-placeholder {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Dimming layer: a plain translucent black wash, not a filter on the
+     image itself, so nothing needs to be explicitly reset for print --
+     this pseudo-element simply doesn't exist outside @media screen. */
+  .pressed-edition-image-stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.18);
+    z-index: 2;
+    pointer-events: none;
+  }
+}
+
+/* Persistent editing controls -- visible on screen regardless of
+   whether an image is currently showing, now centred as an overlay
+   above the dimming layer rather than a block below the stage.
+   pointer-events: none on the wrapper (so empty space around the
+   buttons doesn't intercept clicks meant for whatever's underneath),
+   pointer-events: auto on the actual buttons so they stay clickable. */
+@media screen {
+  .pressed-edition-image-controls {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3mm;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .pressed-edition-empty-button {
+    pointer-events: auto;
+  }
+}
+
+@media print {
+  .pressed-edition-image-controls {
+    display: none !important;
+  }
+}
+
+/* Same dashed-box editorial language as the placeholder, kept
+   deliberately unrounded rather than switched to a pill/filled button
+   -- but now with a solid (not transparent) paper-coloured fill by
+   default, not just on hover, so the label stays legible sitting over
+   an image of unknown tone underneath the dimming layer. */
+.pressed-edition-empty-button {
+  display: inline-block;
+  font-family: "jgs7", monospace;
+  font-size: 7.5pt;
+  color: #000;
+  text-decoration: none;
+  background: #fff;
+  border: 1px dashed #000;
+  padding: 1mm 2mm;
+  cursor: pointer;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.pressed-edition-empty-button:hover,
+.pressed-edition-empty-button:focus-visible {
+  background: #000;
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.pressed-edition-empty-button:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
 
 /* PAGE 2 — GARDEN MAP: the same authoritative ASCII source as the

@@ -90,4 +90,26 @@
   // iframe is same-origin but still a separate document, so clicks
   // inside it can never reach this listener at all.
   dialog.addEventListener("close", closeGreenhouse);
+
+  // Set by assets/js/pressed-edition-print.js's "CHANGE IN GREENHOUSE"
+  // control, alongside the existing returning-to-garden flag (see
+  // assets/js/garden-return-flag.js and assets/js/entrance.js) --
+  // opens this SAME dialog/iframe automatically once back on the
+  // Garden Map, rather than a second Greenhouse instance. Checked here
+  // (not in entrance.js) specifically because this script always loads
+  // after entrance.js (see the <script> order in index.html), so
+  // Entrance has already resolved body.intro-active by the time this
+  // runs -- openGreenhouse()'s own guard against opening during
+  // Entrance is already correctly satisfied.
+  var OPEN_GREENHOUSE_KEY = "resilient-garden-open-greenhouse-on-return";
+  var shouldAutoOpen = false;
+  try {
+    shouldAutoOpen = sessionStorage.getItem(OPEN_GREENHOUSE_KEY) === "true";
+    sessionStorage.removeItem(OPEN_GREENHOUSE_KEY);
+  } catch (err) {
+    shouldAutoOpen = false;
+  }
+  if (shouldAutoOpen) {
+    openGreenhouse(null);
+  }
 })();

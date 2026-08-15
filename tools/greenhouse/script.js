@@ -31,7 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 功能按鈕
     const btnInk = document.getElementById('btn-ink');
     const btnExport = document.getElementById('btn-download');
-    const btnCopyCSS = document.getElementById('btn-copy-css');
+    const btnAddPressedEdition = document.getElementById('btn-add-pressed-edition');
+    const pressedEditionAddStatus = document.getElementById('pressed-edition-add-status');
 
     // Empty state / webcam UI
     const emptyState = document.getElementById('empty-state');
@@ -53,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 2. 全域狀態管理 (State) ---
     let state = {
         image: null,
-        origSizeKB: null,
+        origBytes: null, // raw file.size / captured Blob.size of the current source image -- never a KB-rounded/derived value
         imagesList: [],
         isGridView: false,
         downsample: 100,
@@ -146,12 +147,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (files.length === 0) return false;
 
         files.forEach((file) => {
-            const sizeKB = file.size / 1024;
             const reader = new FileReader();
 
             reader.onload = (event) => {
                 const img = new Image();
-                img.onload = () => addImageToLibrary(img, sizeKB, file.name);
+                // file.size直接傳遞，不經過KB轉換 -- 避免四捨五入後再還原造成誤差
+                img.onload = () => addImageToLibrary(img, file.size, file.name);
                 img.src = event.target.result;
             };
             reader.readAsDataURL(file);
@@ -164,9 +165,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // captured webcam frames arrive here once they are a ready
     // HTMLImageElement, and enter the exact same downstream pipeline
     // (state.imagesList, file-list UI, auto-select, renderCanvas()).
-    function addImageToLibrary(img, sizeKB, name) {
+    function addImageToLibrary(img, sizeBytes, name) {
         const fileListContainer = ensureFileListContainer();
-        const imageData = { img, sizeKB, name };
+        const imageData = { img, sizeBytes, name };
         state.imagesList.push(imageData);
 
         // 建立純文字終端機風格 UI
@@ -192,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
             itemWrapper.classList.add('active');
 
             state.image = imageData.img;
-            state.origSizeKB = imageData.sizeKB;
+            state.origBytes = imageData.sizeBytes;
             updateInterfaceState();
             renderCanvas();
         });
@@ -211,11 +212,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     if(firstItemWrapper) firstItemWrapper.click();
                 } else {
                     state.image = null;
-                    state.origSizeKB = null;
+                    state.origBytes = null;
                     const ctx = canvas.getContext('2d');
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     if(gridView) gridView.innerHTML = '';
-                    updateAggregateHUD(0, 0, 0, 0);
+                    updateOrigAndPowerHUD(0, 0, 0);
+                    updateOutputHUDEstimate(0, 0);
                     showEmptyState();
                 }
             } else if (state.isGridView) {
@@ -288,12 +290,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 4. 核心渲染管線 ---
+    // OUTPUT/SAVED are always the same formula ESTIMATE they originally
+    // were (pixel count x effective bit depth x a fixed compression
+    // guess), for BOTH single and grid view -- restored after a brief
+    // detour through a real canvas.toBlob() measurement, which was
+    // reverted because it didn't match what this HUD has always shown
+    // (see updateOutputHUDEstimate() below). [ ADD TO PRESSED EDITION ]
+    // computes this exact same estimate itself, from the canvas's
+    // current dimensions and settings, rather than reading it back off
+    // the HUD -- see its handler further down.
     function renderCanvas() {
         if (state.imagesList.length === 0) return;
 
         if (state.isGridView && gridView) {
             gridView.innerHTML = '';
-            let totalOrigKB = 0, totalEstKB = 0, totalDark = 0, totalPixels = 0;
+            let totalOrigBytes = 0, totalEstBytes = 0, totalDark = 0, totalPixels = 0;
 
             state.imagesList.forEach(item => {
                 const c = document.createElement('canvas');
@@ -301,19 +312,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 gridView.appendChild(c);
                 const stats = applyPermacomputing(item.img, c, false);
 
-                totalOrigKB += item.sizeKB;
+                totalOrigBytes += item.sizeBytes;
                 const effectiveBitDepth = state.useOrigColor ? (state.bitDepth * 3) : state.bitDepth;
-                totalEstKB += ((stats.w * stats.h) * (effectiveBitDepth / 8) / 1024 * 0.15);
+                totalEstBytes += ((stats.w * stats.h) * (effectiveBitDepth / 8) * 0.15);
                 totalDark += stats.darkPixels;
                 totalPixels += (stats.w * stats.h);
             });
-            updateAggregateHUD(totalOrigKB, totalEstKB, totalDark, totalPixels);
+            updateOrigAndPowerHUD(totalOrigBytes, totalDark, totalPixels);
+            updateOutputHUDEstimate(totalOrigBytes, totalEstBytes);
         } else {
             if (!state.image) return;
             const stats = applyPermacomputing(state.image, canvas, state.isSplitMode);
             const effectiveBitDepth = state.useOrigColor ? (state.bitDepth * 3) : state.bitDepth;
-            const estKB = ((stats.w * stats.h) * (effectiveBitDepth / 8) / 1024 * 0.15);
-            updateAggregateHUD(state.origSizeKB, estKB, stats.darkPixels, (stats.w * stats.h));
+            const estBytes = ((stats.w * stats.h) * (effectiveBitDepth / 8) * 0.15);
+            updateOrigAndPowerHUD(state.origBytes, stats.darkPixels, (stats.w * stats.h));
+            updateOutputHUDEstimate(state.origBytes, estBytes);
         }
     }
 
@@ -432,19 +445,36 @@ document.addEventListener('DOMContentLoaded', () => {
         data[i] = v; data[i+1] = v; data[i+2] = v;
     }
 
-    function updateAggregateHUD(origNum, estNum, darkPixels, totalPixels) {
+    // Auto KiB/MiB unit switching, two decimals -- the SAME rule
+    // assets/js/pressed-edition-print.js's formatBytes() uses for PAGE
+    // 4's [ IMAGE DATA ], so a value shown here and the same value
+    // shown there read identically, not just compute to the same
+    // number. Fed both real bytes (FILE, from state.origBytes) and
+    // estimate bytes (OUTPUT, from the formula in renderCanvas()) --
+    // see the two callers below.
+    function formatSizeLabel(bytes) {
+        if (bytes == null) return '—';
+        const KiB = 1024;
+        const MiB = KiB * 1024;
+        if (Math.abs(bytes) >= MiB) return (bytes / MiB).toFixed(2) + 'MiB';
+        if (Math.abs(bytes) >= KiB) return (bytes / KiB).toFixed(2) + 'KiB';
+        return bytes + 'B';
+    }
+
+    // FILE + POWER need no encoding step, so these update immediately
+    // on every render tick regardless of view mode. origBytes is the
+    // raw file.size/Blob.size this image was loaded with -- see
+    // state.origBytes above -- never a KB-rounded value converted back.
+    function updateOrigAndPowerHUD(origBytes, darkPixels, totalPixels) {
         const hudOrig = document.getElementById('hud-orig');
-        const hudSize = document.getElementById('hud-size');
         const hudPower = document.getElementById('hud-power');
-        const hudSaved = document.getElementById('hud-saved');
 
-        // Display-only: before any image is loaded (origNum falsy/0), show
-        // a neutral placeholder instead of a visually dominant zero value.
-        // The underlying calculations below are unchanged.
-        const hasData = origNum && origNum > 0;
+        // Display-only: before any image is loaded (origBytes falsy/0),
+        // show a neutral placeholder instead of a visually dominant
+        // zero value. The underlying calculations below are unchanged.
+        const hasData = origBytes && origBytes > 0;
 
-        if(hudOrig) hudOrig.innerText = hasData ? `${origNum.toFixed(2)}KB` : '—';
-        if(hudSize) hudSize.innerText = hasData ? `${estNum.toFixed(2)}KB` : '—';
+        if(hudOrig) hudOrig.innerText = hasData ? formatSizeLabel(origBytes) : '—';
 
         if (hasData && totalPixels > 0) {
             const powerSaved = Math.round((darkPixels / totalPixels) * 100);
@@ -452,9 +482,28 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             if(hudPower) hudPower.innerText = '—';
         }
+    }
+
+    // Used by BOTH single and grid view: OUTPUT/SAVED are always the
+    // formula ESTIMATE computed at each call site (pixel count x
+    // effective bit depth x a fixed compression guess) -- this is the
+    // editorial HUD reading Greenhouse has always shown, not a real
+    // encoded size. Kept clamped (0 to 99.9%) as it always was, since
+    // it's a rough heuristic, not a measured value. [ ADD TO PRESSED
+    // EDITION ] computes this SAME estimate itself (see its handler
+    // further down) so PAGE 4 always describes exactly what this HUD
+    // shows, without needing to read the DOM or share mutable state.
+    // estBytes is expressed in bytes so both this and
+    // updateOrigAndPowerHUD() share the one formatSizeLabel() unit rule.
+    function updateOutputHUDEstimate(origBytes, estBytes) {
+        const hudSize = document.getElementById('hud-size');
+        const hudSaved = document.getElementById('hud-saved');
+        const hasData = origBytes && origBytes > 0;
+
+        if (hudSize) hudSize.innerText = hasData ? formatSizeLabel(estBytes) : '—';
 
         if (hasData) {
-            let savedPercent = ((origNum - estNum) / origNum) * 100;
+            let savedPercent = ((origBytes - estBytes) / origBytes) * 100;
             if (savedPercent <= 0) savedPercent = 0;
             else if (savedPercent > 99.9) savedPercent = 99.9;
             if(hudSaved) hudSaved.innerText = `${savedPercent.toFixed(1)}%`;
@@ -664,7 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
             img.onload = () => {
                 const now = new Date();
                 const name = `webcam-capture-${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}.jpg`;
-                addImageToLibrary(img, blob.size / 1024, name);
+                addImageToLibrary(img, blob.size, name);
                 URL.revokeObjectURL(objectUrl);
             };
             img.src = objectUrl;
@@ -814,170 +863,113 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click();
     });
 
-    // 複製 CSS Base64 代碼
-    btnCopyCSS.addEventListener('click', () => {
-        if (!state.image || state.isGridView) {
-            alert('[!] PLEASE USE SINGLE VIEW TO COPY CSS.');
-            return;
+    // Send the currently visible processed result to the Pressed
+    // Edition, together with the real Greenhouse metadata that produced
+    // it (assets/js/pressed-edition-print.js's PAGE 4 [ IMAGE DATA ]
+    // section reads this same record). This key must match pressed-
+    // edition-print.js's PRESSED_EDITION_IMAGE_KEY and index.html's
+    // live map, whichever page reads it next.
+    //
+    // sessionStorage (not localStorage): this is a single-visit
+    // selection belonging to the current Garden session, not a
+    // permanent preference -- matches assets/js/garden-return-flag.js's
+    // same reasoning for the return-navigation flags.
+    if (btnAddPressedEdition) {
+        const PRESSED_EDITION_IMAGE_KEY = 'resilient-garden-pressed-edition-image';
+        const DITHER_ALGORITHM_LABELS = ['Floyd–Steinberg', 'Bayer matrix', 'Random noise'];
+        let statusTimeout = null;
+
+        // state.origBytes is the uploaded File's own raw file.size (see
+        // handleFiles() above), stored and passed through as-is, never
+        // rounded to KB and converted back. outputBytes is the SAME
+        // formula estimate the OUTPUT/SAVED HUD shows (not a real
+        // encoded Blob size -- see updateOutputHUDEstimate() above and
+        // the click handler below, which computes it fresh from the
+        // canvas's current dimensions so it always matches what's on
+        // screen at the moment of the click). state.image is the
+        // original, un-downsampled Image element (so .width/.height
+        // are the real source dimensions), and the rest come straight
+        // from the actual IMAGE REDUCTION / DITHERING METHOD controls'
+        // current values.
+        function buildPressedEditionMetadata(outputBytes, outputWidth, outputHeight) {
+            return {
+                originalBytes: state.origBytes,
+                outputBytes: outputBytes,
+                originalWidth: state.image ? state.image.width : null,
+                originalHeight: state.image ? state.image.height : null,
+                outputWidth: outputWidth,
+                outputHeight: outputHeight,
+                parameters: {
+                    downsample: state.downsample,
+                    bitDepth: state.bitDepth,
+                    ditherLevel: state.ditherLvl,
+                    algorithm: DITHER_ALGORITHM_LABELS[state.algorithm] || null,
+                    colourMode: state.useOrigColor ? 'Original colour' : 'Monochrome'
+                }
+            };
         }
-        const dataUrl = canvas.toDataURL('image/webp', 0.8);
-        const cssCode = `/* Permacomputing Texture */\nbody {\n  background-color: #000;\n  background-image: url('${dataUrl}');\n  background-repeat: repeat;\n  image-rendering: pixelated; /* 確保背景也維持硬派方塊 */\n}`;
 
-        navigator.clipboard.writeText(cssCode).then(() => {
-            const originalText = btnCopyCSS.innerText;
-            btnCopyCSS.innerText = '[ COPIED! ]';
-            btnCopyCSS.classList.add('highlight-bg'); // 反白提示
-
-            setTimeout(() => {
-                btnCopyCSS.innerText = originalText;
-                btnCopyCSS.classList.remove('highlight-bg');
-            }, 2000);
-        });
-    });
-
-
-    // ==========================================
-    // 🖨️ 熱感印表機直印模組 (智慧防呆升級版)
-    // ==========================================
-    const btnPrintThermal = document.getElementById('btn-print-thermal');
-
-    if (btnPrintThermal) {
-        btnPrintThermal.addEventListener('click', () => {
+        btnAddPressedEdition.addEventListener('click', () => {
             if (!state.image) {
                 alert('[!] PLEASE IMPORT AN IMAGE FIRST.');
                 return;
             }
             if (state.isGridView) {
-                alert('[!] PLEASE SWITCH TO SINGLE VIEW TO PRINT.');
+                alert('[!] PLEASE SWITCH TO SINGLE VIEW TO ADD TO PRESSED EDITION.');
                 return;
             }
 
-            const printWindow = window.open('', '_blank', 'width=350,height=600');
-            if (!printWindow) {
-                alert('[!] POP-UP BLOCKED! PLEASE ALLOW POP-UPS TO PRINT.');
-                return;
-            }
+            // The SAME estimate formula renderCanvas() just used to
+            // paint OUTPUT/SAVED, evaluated fresh from the canvas's
+            // current (already-processed) dimensions and the current
+            // control values -- not a re-run of the whole pixel
+            // pipeline, and not read back off the HUD's own DOM text --
+            // so PAGE 4 always describes exactly what this HUD shows at
+            // the moment of this click.
+            const effectiveBitDepth = state.useOrigColor ? (state.bitDepth * 3) : state.bitDepth;
+            const estOutputBytes = ((canvas.width * canvas.height) * (effectiveBitDepth / 8) * 0.15);
+            const metadata = buildPressedEditionMetadata(estOutputBytes, canvas.width, canvas.height);
 
-            // ==========================================
-            // 🧠 核心升級：智慧像素分析引擎 (Smart Pixel Analysis)
-            // ==========================================
-            // 1. 建立一個極速的隱形畫布來讀取原始像素
-            const tempCtx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
-            tempCtx.canvas.width = state.image.width;
-            tempCtx.canvas.height = state.image.height;
-            tempCtx.drawImage(state.image, 0, 0);
-            const rawData = tempCtx.getImageData(0, 0, tempCtx.canvas.width, tempCtx.canvas.height).data;
+            // canvas.toBlob() here is only to produce the actual stored
+            // WebP image (via FileReader below) -- its Blob.size is
+            // never read for the metadata above, which is already
+            // built from the estimate.
+            canvas.toBlob((blob) => {
+                if (!blob) {
+                    if (pressedEditionAddStatus) {
+                        pressedEditionAddStatus.textContent = '[!] COULD NOT ENCODE IMAGE.';
+                    }
+                    return;
+                }
 
-            // 2. 統計整張圖片的總亮度
-            let totalLuminance = 0;
-            for (let i = 0; i < rawData.length; i += 4) {
-                // 使用 ITU-R 601 標準的灰階權重公式
-                totalLuminance += (0.299 * rawData[i] + 0.587 * rawData[i+1] + 0.114 * rawData[i+2]);
-            }
-            // 3. 計算平均亮度 (0 是純黑，255 是純白)
-            const avgLuminance = totalLuminance / (tempCtx.canvas.width * tempCtx.canvas.height);
+                const reader = new FileReader();
 
-            // 4. 決策邏輯：暗圖才需要反轉，亮圖絕對不能反轉
-            const smartInvert = avgLuminance < 128;
+                reader.onload = () => {
+                    const record = Object.assign({ image: reader.result }, metadata);
 
-            // ==========================================
-            // 🖨️ 準備列印畫布
-            // ==========================================
-            // 先備份使用者目前的螢幕觀看狀態
-            const originalInvertState = state.isInvertMode;
-
-            // 強制讓系統套用「最環保的實體列印狀態」
-            state.isInvertMode = smartInvert;
-
-            const printCanvas = document.createElement('canvas');
-            applyPermacomputing(state.image, printCanvas, state.isSplitMode);
-            const dataUrl = printCanvas.toDataURL('image/png'); // 用 PNG 保留銳利點陣
-
-            // 算完後，把網頁恢復成使用者原本在看的狀態
-            state.isInvertMode = originalInvertState;
-            renderCanvas();
-
-            // 取得目前 HUD 上的數據
-            const sizeText = document.getElementById('hud-size') ? document.getElementById('hud-size').innerText : 'N/A';
-            let savedText = document.getElementById('hud-saved') ? document.getElementById('hud-saved').innerText : 'N/A';
-            const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
-
-            // 注入給 Sewoo SLK-TS100 (80mm) 的發票排版
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>Permacomputing Studio - Receipt</title>
-                    <style>
-                        @page { size: 80mm auto; margin: 0; }
-                        * { box-sizing: border-box; margin: 0; padding: 0; }
-                        body {
-                            width: 80mm;
-                            background: #ffffff;
-                            color: #000000;
-                            font-family: 'Courier New', Courier, monospace;
-                            padding: 4mm 6mm;
-                            font-size: 11px;
-                            text-transform: uppercase;
+                    try {
+                        sessionStorage.setItem(PRESSED_EDITION_IMAGE_KEY, JSON.stringify(record));
+                    } catch (err) {
+                        // Quota exceeded or storage unavailable -- tell the visitor
+                        // rather than silently doing nothing.
+                        if (pressedEditionAddStatus) {
+                            pressedEditionAddStatus.textContent = '[!] COULD NOT SAVE -- STORAGE UNAVAILABLE.';
                         }
-                        .header-receipt {
-                            text-align: center;
-                            border-bottom: 1px dashed #000000;
-                            padding-bottom: 3mm;
-                            margin-bottom: 4mm;
-                        }
-                        img.receipt-img {
-                            width: 100%;
-                            height: auto;
-                            display: block;
-                            image-rendering: pixelated;
-                            border: 1px solid #000000;
-                        }
-                        .meta-receipt {
-                            margin-top: 4mm;
-                            border-top: 1px dashed #000000;
-                            padding-top: 3mm;
-                            line-height: 1.5;
-                        }
-                        .flex-row { display: flex; justify-content: space-between; }
-                        .footer-receipt {
-                            text-align: center;
-                            margin-top: 6mm;
-                            font-size: 9px;
-                            letter-spacing: 0.5px;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="header-receipt">
-                        <div>** PERMACOMPUTING STUDIO **</div>
-                        <div>VER 1.0 - PROTOTYPE</div>
-                    </div>
+                        console.warn('[Greenhouse] Unable to store Pressed Edition image.', err);
+                        return;
+                    }
 
-                    <img class="receipt-img" src="${dataUrl}" />
+                    if (pressedEditionAddStatus) {
+                        pressedEditionAddStatus.textContent = 'Added to Pressed Edition.';
+                        if (statusTimeout) clearTimeout(statusTimeout);
+                        statusTimeout = setTimeout(() => {
+                            pressedEditionAddStatus.textContent = '';
+                        }, 3000);
+                    }
+                };
 
-                    <div class="meta-receipt">
-                        <div class="flex-row"><span>DATE/TIME:</span><span>${timestamp}</span></div>
-                        <div class="flex-row"><span>OUTPUT SIZE:</span><span>${sizeText}</span></div>
-                        <div class="flex-row"><span>BANDWIDTH SAVED:</span><span>${savedText}</span></div>
-                        <div class="flex-row"><span>ALGORITHM:</span><span>${selectAlgorithm.value.replace('> ', '')}</span></div>
-                        <div class="flex-row"><span>AUTO INVERT:</span><span>${smartInvert ? 'TRIGGERED (LOW-KEY)' : 'BYPASSED (HIGH-KEY)'}</span></div>
-                    </div>
-
-                    <div class="footer-receipt">
-                        ====== END OF ARTIFACT ======<br>
-                        MATERIAL TRACE GENERATED VIA SEWOO
-                    </div>
-
-                    <script>
-                        window.onload = function() {
-                            window.print();
-                            setTimeout(function() { window.close(); }, 300);
-                        };
-                    <\/script>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
+                reader.readAsDataURL(blob);
+            }, 'image/webp', 0.8);
         });
     }
 

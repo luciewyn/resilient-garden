@@ -833,6 +833,30 @@ body.intro-active:not(:has(#garden-map:target)) .map-index {
   padding: 0;
 }
 
+/* .ascii-map-section carries tabindex="-1" (index.html) so assets/js/
+   entrance.js can move accessibility focus onto the map programmatically
+   -- after dismissing Entrance, and after returning from Dictionary/
+   Field Notes/About/Pressed Edition -- without adding an extra Tab stop
+   for keyboard users (tabindex="-1" means a visitor can never actually
+   Tab their way to this element). That focus is therefore never the
+   result of real keyboard navigation, so the browser's default focus
+   ring reads as a spurious blue outline around the entire viewport
+   rather than a real navigation aid. Hidden with :not(:focus-visible)
+   rather than unconditionally, so an actual keyboard-visible focus (if
+   a browser's heuristics ever do treat this programmatic call as one)
+   still gets a real, intentional indicator instead of silently
+   vanishing -- see .soil-map-trigger:focus-visible elsewhere in this
+   file for the same dashed-outline convention used site-wide for map
+   elements. */
+.ascii-map-section:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.ascii-map-section:focus-visible {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
 /* Explicit bottom of the shared homepage stacking order (see the --z-*
    variables in :root): the lowest visual layer, below its own hotspots
    and shade-cells (--z-map-destinations, just above), Map Index/Garden
