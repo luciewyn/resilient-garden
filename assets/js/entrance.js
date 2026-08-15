@@ -64,6 +64,35 @@
     }
   }
 
+  // Set by assets/js/garden-return-flag.js (loaded on dictionary.html,
+  // field-notes/index.html, about.html, pressed-edition.html) when the
+  // visitor clicks one of those pages' own "← Garden Map" breadcrumb
+  // links -- a real forward navigation back here, not the browser's
+  // native Back/Forward (already handled below via the "back_forward"
+  // navigation-type branch and ENTRANCE_DISMISSED_KEY on its own).
+  // Consumed once, immediately, so it never lingers to affect a later
+  // reload or a genuine fresh visit.
+  var RETURNING_KEY = "resilient-garden-returning-to-garden";
+
+  function consumeReturningFlag() {
+    var returning;
+    try {
+      returning = sessionStorage.getItem(RETURNING_KEY) === "true";
+      sessionStorage.removeItem(RETURNING_KEY);
+    } catch (err) {
+      return false; // sessionStorage unavailable -- fall back to normal Entrance logic
+    }
+    return returning;
+  }
+
+  function clearReturningFlag() {
+    try {
+      sessionStorage.removeItem(RETURNING_KEY);
+    } catch (err) {
+      // ignore -- nothing to clear if storage isn't available
+    }
+  }
+
   var currentSlide = 0;
 
   function renderEntranceSlide(index) {
@@ -148,6 +177,7 @@
       }
       resetMapIndex();
       clearDismissedFlag();
+      clearReturningFlag();
       resetEntrance();
       // Rescale only -- never re-render. assets/js/ascii-map-scale.js's
       // renderer already guards against running twice on its own
@@ -166,6 +196,14 @@
   // navigated here -- never on a panel, hash, focus, or visibility
   // event.
   //
+  //   returning to Garden Map from an internal page (dictionary.html,
+  //                field-notes/index.html, about.html,
+  //                pressed-edition.html -- see assets/js/
+  //                garden-return-flag.js, which sets this the moment
+  //                one of those pages loads, however the visitor got
+  //                there or leaves it) -- takes priority over
+  //                everything below: skip Entrance and show the map
+  //                immediately, regardless of navigationType.
   //   reload       -- always show Entrance; clears any dismissed flag
   //                   left over from before the reload.
   //   back_forward -- a full re-execution of this script only happens
@@ -186,37 +224,47 @@
   // file) still starts from that same static markup.
   resetMapIndex();
 
-  var navigationEntry =
-    window.performance &&
-    typeof performance.getEntriesByType === "function" &&
-    performance.getEntriesByType("navigation")[0];
-  var navigationType = navigationEntry && navigationEntry.type;
+  if (consumeReturningFlag()) {
+    enterGarden();
+  } else {
+    var navigationEntry =
+      window.performance &&
+      typeof performance.getEntriesByType === "function" &&
+      performance.getEntriesByType("navigation")[0];
+    var navigationType = navigationEntry && navigationEntry.type;
 
-  if (navigationType === "reload") {
-    clearDismissedFlag();
-    resetEntrance();
-  } else if (navigationType === "back_forward") {
-    if (readDismissedFlag()) {
-      enterGarden();
+    if (navigationType === "reload") {
+      clearDismissedFlag();
+      resetEntrance();
+    } else if (navigationType === "back_forward") {
+      if (readDismissedFlag()) {
+        enterGarden();
+      } else {
+        resetEntrance();
+      }
     } else {
+      clearDismissedFlag();
       resetEntrance();
     }
-  } else {
-    clearDismissedFlag();
-    resetEntrance();
   }
 
   // Covers the case where the browser DID restore this page from
   // bfcache: script state (currentSlide, overlay.hidden, the
   // intro-active class) is preserved exactly as it was when the
-  // visitor left, and none of the code above re-runs at all. If
-  // Entrance was already dismissed before they navigated away, the
-  // page is already showing the correct dismissed state, so this is a
-  // deliberate no-op rather than a reset. A non-bfcache pageshow
+  // visitor left, and none of the code above re-runs at all -- so if
+  // Entrance was NOT already dismissed before they navigated away (the
+  // header nav is reachable while Entrance is still showing, so this
+  // is a real case, not just a hypothetical), it would otherwise come
+  // back exactly as it was: still showing. The returning flag (set by
+  // assets/js/garden-return-flag.js the moment one of the four internal
+  // pages loaded, cleared on that page's Home link) is consumed here
+  // specifically for that reason -- it's the one signal that survives
+  // a true bfcache restore, since it lives in sessionStorage rather
+  // than in this script's now-frozen state. A non-bfcache pageshow
   // (event.persisted === false) also fires on every ordinary load,
-  // right after the navigation-type handling above already ran, so it
-  // must do nothing here too rather than resetting Entrance a second
-  // time.
+  // right after the navigation-type handling above already ran (which
+  // already consumed the flag in that case), so it must do nothing
+  // here too rather than resetting Entrance a second time.
   window.addEventListener("pageshow", function (event) {
     // Independent of the Entrance restoration logic above: whether or
     // not this was a bfcache restore, and regardless of what Entrance
@@ -226,6 +274,9 @@
     resetMapIndex();
 
     if (event.persisted) {
+      if (consumeReturningFlag()) {
+        enterGarden();
+      }
       return;
     }
   });
