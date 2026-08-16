@@ -3,12 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bed 03 — Thermal Traces · The Resilient Garden</title>
+<title>Infrastructure · Bed 03 · The Resilient Garden</title>
 <link rel="stylesheet" href="../assets/css/garden.css">
+<link rel="icon" type="image/png" href="../assets/cursors/bee.png">
 </head>
 <body>
 <header class="site-header">
-  <a class="site-title" href="../index.html">The Resilient Garden</a>
+  <a class="ascii-home-link" href="../index.html" aria-label="Return to The Resilient Garden home"><pre class="ascii-home-logo" aria-hidden="true">    *         …
+   \|/   @   -Y-   (O)    @@@
+   \|/  \|/ \\|// \\|//   \|/</pre></a>
   <nav class="header-nav" aria-label="Main">
     <a href="../dictionary.html" class="ascii-nav-link"><pre class="ascii-nav-art" aria-hidden="true"><span class="ascii-nav-mark"> @</span>
 <span class="ascii-nav-mark">\|/</span>  Dictionary  <span class="ascii-nav-mark">\|/</span></pre><span class="visually-hidden">Dictionary</span></a>
@@ -19,32 +22,51 @@
   </nav>
 </header>
 
-<main>
-  <p class="breadcrumb"><a href="../index.html#active-experiments">← Active Experiments</a></p>
-  <h1>Bed 03 — Thermal Traces</h1>
+<main class="bed-03-page">
+  <p class="breadcrumb"><a href="../index.html#garden-beds-index">← Garden Beds</a></p>
+  <h1 id="bed-03-page-title">INFRASTRUCTURE</h1>
 
-  <dl class="bed-meta">
-    <div class="meta-row"><dt>Bed</dt><dd>03</dd></div>
-    <div class="meta-row"><dt>Status</dt><dd>Growing</dd></div>
-    <div class="meta-row"><dt>Date planted</dt><dd>2026-07-30</dd></div>
-    <div class="meta-row"><dt>Last tended</dt><dd>2026-07-30</dd></div>
-    <div class="meta-row"><dt>Materials or tools</dt><dd>Thermal printer, thermal paper, heat exposure</dd></div>
-    <div class="meta-row"><dt>Related field notes</dt><dd><span class="provisional">none yet</span></dd></div>
-    <div class="meta-row"><dt>Output</dt><dd><span class="provisional">none yet</span></dd></div>
-  </dl>
+  <p class="infrastructure-meta">BED 03 ✦ STATUS Growing ✦ DATE PLANTED 29.06.26 ✦ LAST TENDED 09.08.26</p>
 
-  <section>
-    <h2>Description</h2>
-    <p class="provisional-note">[provisional — drawn from the project brief, not yet a tested method]</p>
-    <p>This bed investigates thermal printing, fading, heat sensitivity, material decay, and the translation of a digital image from screen to paper. The throughline is what happens when an image is forced into a physical medium that continues to change after it's printed.</p>
-  </section>
+  <h3>METHODS</h3>
+  <p>Static HTML and CSS, local hosting, solar power, battery storage, file-size reduction, energy-aware design</p>
 
-  <section>
-    <h2>Process notes</h2>
-    <p class="provisional-note">[provisional — no experiments run yet]</p>
-    <p>No experiments have been run yet. This page will be updated as the bed is tended.</p>
-  </section>
+  <h3>GROWN HERE</h3>
+  <p>The locally hosted Resilient Garden<br>Garden Status display<br>Design responses for changing energy conditions</p>
+
+  <h3 class="infrastructure-description-heading">DESCRIPTION</h3>
+  <p>This bed looks at the conditions that keep the garden alive.</p>
+  <p>Rather than treating infrastructure as something hidden in the background, it asks how hosting, storage, energy, and access can become visible parts of a publication.</p>
+  <p>The garden is built as a small static site that can be hosted locally, without depending entirely on a distant server. Some parts can run on energy gathered through a portable solar panel and stored in a battery.</p>
+  <p>Because sunlight is uneven, the garden cannot assume constant abundance. On bright days, there may be enough power for images to move and tools to stay awake. During cloudy periods, the garden may need to slow down: movement is reduced, files become lighter, and some parts rest until more energy returns.</p>
+  <p>Infrastructure here is not only technical support. It shapes how the publication looks, behaves, and remains accessible over time.</p>
+
+  <figure class="infrastructure-figure">
+    <button type="button" class="image-reveal" aria-label="Reveal colour image" aria-pressed="false">
+      <img src="../assets/image/host_01.webp" data-bw-src="../assets/image/host_01.webp" data-color-src="../assets/image/host_colour01.jpg" alt="Diagram of a local network: a router assigns each connected device its own private IP address, separate from the single public IP address facing the internet." loading="lazy" decoding="async">
+    </button>
+    <figcaption class="infrastructure-caption">Private IP addressing on a local network: each device gets its own address from the router, distinct from the network's one public address facing the internet.</figcaption>
+  </figure>
+
+  <h3 class="infrastructure-experiments-heading">EXPERIMENTS IN THIS BED</h3>
+  <div class="infrastructure-experiment">
+    <p class="infrastructure-experiment-label">01 → STATIC HTML</p>
+    <p>The garden is made from hand-written HTML and CSS, with JavaScript used only where interaction requires it. Each page is kept small, direct, and readable without external frameworks.</p>
+  </div>
+  <div class="infrastructure-experiment">
+    <p class="infrastructure-experiment-label">02 → LOCAL HOSTING</p>
+    <p>I tested hosting the website from a local device and opening it through a shared network. This allows the garden to remain accessible nearby without relying on a continuous internet connection.</p>
+  </div>
+  <div class="infrastructure-experiment">
+    <p class="infrastructure-experiment-label">03 → MAKING ITS OWN POWER</p>
+    <p>A portable solar panel was connected to an Anker SOLIX power station to test whether the garden could produce and store some of the energy it needed.</p>
+  </div>
+  <div class="infrastructure-experiment">
+    <p class="infrastructure-experiment-label">04 → DESIGNING FOR A CLOUDY DAY</p>
+    <p>Changing weather led to different design responses. Images can become lighter, movement can be reduced, and some tools can remain dormant until more energy is available.</p>
+  </div>
 </main>
 
+<script src="../assets/js/image-reveal.js" defer></script>
 </body>
 </html>

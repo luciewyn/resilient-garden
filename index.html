@@ -209,6 +209,15 @@
       <a id="image-reduction-trigger-map" class="map-destination image-reduction-map-trigger" href="beds/bed-01-image-reduction.html" aria-label="Open Image Reduction">
         <span class="image-reduction-hit"></span>
       </a>
+      <a id="screen-traces-trigger-map" class="map-destination screen-traces-map-trigger" href="beds/bed-02-kindle-ghosting.html" aria-label="Open Screen Traces">
+        <span class="screen-traces-hit"></span>
+      </a>
+      <a id="infrastructure-trigger-map" class="map-destination infrastructure-map-trigger" href="beds/bed-03-thermal-traces.html" aria-label="Open Infrastructure">
+        <span class="infrastructure-hit"></span>
+      </a>
+      <a id="compost-trigger-map" class="map-destination compost-map-trigger" href="compost.html" aria-label="Open Compost">
+        <span class="compost-hit"></span>
+      </a>
       <a id="pressed-edition-trigger-map" class="map-destination pressed-edition-map-trigger" href="pressed-edition.html" aria-label="Open Pressed Edition"></a>
     </div>
     </div>
@@ -224,15 +233,15 @@
           <li><a href="soil.html" id="soil-trigger-index">Soil</a></li>
           <li><a href="energy.html" id="energy-trigger-index">Energy</a></li>
           <li><a href="tools/greenhouse/index.html" id="greenhouse-trigger-index">Greenhouse</a></li>
-          <li><a href="compost.html">Compost</a></li>
+          <li><a href="compost.html" id="compost-trigger-index">Compost</a></li>
         </ul>
       </div>
       <div id="garden-beds-index">
         <p class="index-group-label">Garden Beds</p>
         <ul>
           <li><a href="beds/bed-01-image-reduction.html" id="image-reduction-trigger-index">Image Reduction</a></li>
-          <li><a href="beds/bed-02-kindle-ghosting.html">Screen Traces</a></li>
-          <li><a href="beds/bed-03-thermal-traces.html">Infrastructure</a></li>
+          <li><a href="beds/bed-02-kindle-ghosting.html" id="screen-traces-trigger-index">Screen Traces</a></li>
+          <li><a href="beds/bed-03-thermal-traces.html" id="infrastructure-trigger-index">Infrastructure</a></li>
         </ul>
       </div>
       <div id="harvest-index">
@@ -694,6 +703,152 @@
 
     </div>
   </dialog>
+
+  <dialog id="screen-traces-dialog" class="map-content-dialog screen-traces-dialog" aria-labelledby="screen-traces-dialog-title">
+    <header class="map-content-dialog-header">
+      <h2 id="screen-traces-dialog-title">SCREEN TRACES</h2>
+      <button type="button" class="map-content-dialog-close" aria-label="Close Screen Traces">[×]</button>
+    </header>
+    <div class="map-content-dialog-body screen-traces-dialog-body">
+
+      <p class="screen-traces-meta">BED 02 ✦ STATUS Growing ✦ DATE PLANTED 05.05.26 ✦ LAST TENDED 09.08.26</p>
+
+      <h3>METHODS</h3>
+      <p>E-ink display testing, frame-by-frame image sequencing, page refresh, ghosting, screen observation and photography</p>
+
+      <h3>GROWN HERE</h3>
+      <p>A frame-by-frame image sequence for an old Kindle<br>Observations of ghosting, flashing, and delay</p>
+
+      <h3 class="screen-traces-description-heading">DESCRIPTION</h3>
+      <p>This bed follows what an image leaves behind on an old Kindle screen. A sequence of 1-bit images was loaded onto the device and advanced one frame at a time. Instead of changing immediately, the display paused, flashed, and sometimes held faint parts of the previous image.</p>
+      <p>These traces are usually treated as faults to be removed. Here, they become part of the image. The experiment looks at how the Kindle’s slow refresh changes movement, how one frame remains inside the next, and how the timing of a screen can shape the way an image is read.</p>
+      <p>The photographs document different moments in the sequence, including page-turn flashes and fragments of earlier frames that remain visible.</p>
+
+      <figure class="field-note-figure field-note-video-figure screen-traces-figure">
+        <button type="button" class="field-note-video-trigger" aria-label="Play video">
+          <img src="assets/image/exp_kindle.webp" alt="Kindle screen experiment" loading="lazy" decoding="async">
+          <span class="field-note-video-play" aria-hidden="true">[ PLAY ]</span>
+        </button>
+        <video class="field-note-video" controls playsinline preload="metadata" hidden>
+          <source src="assets/video/exp_kindle.mp4" type="video/mp4">
+        </video>
+        <figcaption class="field-note-caption">I drew the animation frame by frame in code, then tested it through page turns on the Kindle’s E‑ink screen. Each new frame caused the screen to briefly flash, making the display’s refresh process part of the animation.</figcaption>
+      </figure>
+
+      <h3 class="screen-traces-experiments-heading">EXPERIMENTS IN THIS BED</h3>
+      <div class="screen-traces-experiment">
+        <p class="screen-traces-experiment-label">01 → OPENING THE KINDLE</p>
+        <p>I tested ways of opening locally stored images on an old Kindle, including an attempt to use KOReader. This was the first step towards treating the device as a small display for my own image sequences.</p>
+      </div>
+      <div class="screen-traces-experiment">
+        <p class="screen-traces-experiment-label">02 → FRAME BY FRAME</p>
+        <p>A short image sequence was exported as individual 1-bit frames and viewed one page at a time. The Kindle slowed the movement down, turning the sequence into a series of pauses and transitions.</p>
+      </div>
+      <div class="screen-traces-experiment">
+        <p class="screen-traces-experiment-label">03 → GHOSTING</p>
+        <p>During page turns, parts of the previous frame sometimes remained on the screen. These temporary overlaps produced images that were not contained in the original files but appeared through the behaviour of the display itself.</p>
+      </div>
+
+    </div>
+  </dialog>
+
+  <dialog id="infrastructure-dialog" class="map-content-dialog infrastructure-dialog" aria-labelledby="infrastructure-dialog-title">
+    <header class="map-content-dialog-header">
+      <h2 id="infrastructure-dialog-title">INFRASTRUCTURE</h2>
+      <button type="button" class="map-content-dialog-close" aria-label="Close Infrastructure">[×]</button>
+    </header>
+    <div class="map-content-dialog-body infrastructure-dialog-body">
+
+      <p class="infrastructure-meta">BED 03 ✦ STATUS Growing ✦ DATE PLANTED 29.06.26 ✦ LAST TENDED 09.08.26</p>
+
+      <h3>METHODS</h3>
+      <p>Static HTML and CSS, local hosting, solar power, battery storage, file-size reduction, energy-aware design</p>
+
+      <h3>GROWN HERE</h3>
+      <p>The locally hosted Resilient Garden<br>Garden Status display<br>Design responses for changing energy conditions</p>
+
+      <h3 class="infrastructure-description-heading">DESCRIPTION</h3>
+      <p>This bed looks at the conditions that keep the garden alive.</p>
+      <p>Rather than treating infrastructure as something hidden in the background, it asks how hosting, storage, energy, and access can become visible parts of a publication.</p>
+      <p>The garden is built as a small static site that can be hosted locally, without depending entirely on a distant server. Some parts can run on energy gathered through a portable solar panel and stored in a battery.</p>
+      <p>Because sunlight is uneven, the garden cannot assume constant abundance. On bright days, there may be enough power for images to move and tools to stay awake. During cloudy periods, the garden may need to slow down: movement is reduced, files become lighter, and some parts rest until more energy returns.</p>
+      <p>Infrastructure here is not only technical support. It shapes how the publication looks, behaves, and remains accessible over time.</p>
+
+      <figure class="infrastructure-figure">
+        <button type="button" class="image-reveal" aria-label="Reveal colour image" aria-pressed="false">
+          <img src="assets/image/host_01.webp" data-bw-src="assets/image/host_01.webp" data-color-src="assets/image/host_colour01.jpg" alt="Diagram of a local network: a router assigns each connected device its own private IP address, separate from the single public IP address facing the internet." loading="lazy" decoding="async">
+        </button>
+        <figcaption class="infrastructure-caption">Private IP addressing on a local network: each device gets its own address from the router, distinct from the network's one public address facing the internet.</figcaption>
+      </figure>
+
+      <h3 class="infrastructure-experiments-heading">EXPERIMENTS IN THIS BED</h3>
+      <div class="infrastructure-experiment">
+        <p class="infrastructure-experiment-label">01 → STATIC HTML</p>
+        <p>The garden is made from hand-written HTML and CSS, with JavaScript used only where interaction requires it. Each page is kept small, direct, and readable without external frameworks.</p>
+      </div>
+      <div class="infrastructure-experiment">
+        <p class="infrastructure-experiment-label">02 → LOCAL HOSTING</p>
+        <p>I tested hosting the website from a local device and opening it through a shared network. This allows the garden to remain accessible nearby without relying on a continuous internet connection.</p>
+      </div>
+      <div class="infrastructure-experiment">
+        <p class="infrastructure-experiment-label">03 → MAKING ITS OWN POWER</p>
+        <p>A portable solar panel was connected to an Anker SOLIX power station to test whether the garden could produce and store some of the energy it needed.</p>
+      </div>
+      <div class="infrastructure-experiment">
+        <p class="infrastructure-experiment-label">04 → DESIGNING FOR A CLOUDY DAY</p>
+        <p>Changing weather led to different design responses. Images can become lighter, movement can be reduced, and some tools can remain dormant until more energy is available.</p>
+      </div>
+
+    </div>
+  </dialog>
+
+  <dialog id="compost-dialog" class="map-content-dialog compost-dialog" aria-labelledby="compost-dialog-title">
+    <header class="map-content-dialog-header">
+      <h2 id="compost-dialog-title">GROWING WITH WHAT REMAINS</h2>
+      <button type="button" class="map-content-dialog-close" aria-label="Close Compost">[×]</button>
+    </header>
+    <div class="map-content-dialog-body compost-dialog-body">
+
+      <p class="compost-intro">Old devices return as material for new growth.</p>
+
+      <h3>MATERIAL IN THE PILE</h3>
+      <p>HTC One smartphone, 2017<br>Existing screen, processor, storage, and battery</p>
+
+      <h3>RETURNED AS</h3>
+      <p>A local host and display for a lightweight edition of <em>The Resilient Garden</em></p>
+
+      <h3 class="compost-description-heading">DESCRIPTION</h3>
+      <p>Compost is where old devices are brought back into use. Instead of replacing the HTC One with newer hardware, I began adapting the garden to what this phone could still support.</p>
+      <p>A lighter edition of the website was made to fit its small screen, older browser, limited processing power, and ageing battery. Field Notes and other secondary materials were removed, images were reduced, and movement was kept to a minimum. What remains is a shorter path through the essential parts of the garden.</p>
+      <p>The phone becomes both a material and a design condition. Its limitations decide what stays, what is cut back, and how small the publication needs to become.</p>
+
+      <figure class="compost-figure">
+        <button type="button" class="image-reveal" aria-label="Reveal colour image" aria-pressed="false">
+          <img src="assets/image/exp_loalhost_02.webp" data-bw-src="assets/image/exp_loalhost_02.webp" data-color-src="assets/image/exp_loalhost_colour02.webp" alt="Local hosting test, image 2" loading="lazy" decoding="async">
+        </button>
+        <figcaption class="compost-caption">Process of the old phone keeping the server running in the terminal plugin.</figcaption>
+      </figure>
+
+      <h3 class="compost-returning-heading">RETURNING THE DEVICE</h3>
+      <div class="compost-entry">
+        <p class="compost-entry-label">01 → TAKING IT OUT OF STORAGE</p>
+        <p>The HTC One was brought back into use and tested as a possible host and display. Its screen, browser, battery, and network connection became the starting conditions for the new version.</p>
+      </div>
+      <div class="compost-entry">
+        <p class="compost-entry-label">02 → CUTTING THE GARDEN BACK</p>
+        <p>The full website was reduced to its essential pages. Field Notes, heavier images, additional interactions, and other non-essential elements were removed.</p>
+      </div>
+      <div class="compost-entry">
+        <p class="compost-entry-label">03 → HOSTING LOCALLY</p>
+        <p>The lightweight garden is stored and hosted locally on the phone. Visitors nearby can access it without depending on a remote server or continuous internet connection.</p>
+      </div>
+      <div class="compost-entry">
+        <p class="compost-entry-label">04 → WORKING WITH ITS AGE</p>
+        <p>The phone’s small screen, older software, and limited battery are not hidden. They shape the structure, pace, and visual language of this edition.</p>
+      </div>
+
+    </div>
+  </dialog>
 </main>
 
 <script src="assets/js/resource-indicator.js" defer></script>
@@ -707,6 +862,7 @@
 <script src="assets/js/ascii-map-interaction.js" defer></script>
 <script src="assets/js/content-panel.js" defer></script>
 <script src="assets/js/image-reveal.js" defer></script>
+<script src="assets/js/field-note-video.js" defer></script>
 <script src="assets/js/greenhouse-dialog.js" defer></script>
 <script src="assets/js/energy-dialog.js" defer></script>
 <script src="assets/js/seed-dialog.js" defer></script>
@@ -717,5 +873,8 @@
 <script src="assets/js/screen-materiality-dialog.js" defer></script>
 <script src="assets/js/digital-garden-dialog.js" defer></script>
 <script src="assets/js/image-reduction-dialog.js" defer></script>
+<script src="assets/js/screen-traces-dialog.js" defer></script>
+<script src="assets/js/infrastructure-dialog.js" defer></script>
+<script src="assets/js/compost-dialog.js" defer></script>
 </body>
 </html>

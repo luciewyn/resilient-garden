@@ -3,12 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bed 02 — Kindle Ghosting · The Resilient Garden</title>
+<title>Screen Traces · Bed 02 · The Resilient Garden</title>
 <link rel="stylesheet" href="../assets/css/garden.css">
+<link rel="icon" type="image/png" href="../assets/cursors/bee.png">
 </head>
 <body>
 <header class="site-header">
-  <a class="site-title" href="../index.html">The Resilient Garden</a>
+  <a class="ascii-home-link" href="../index.html" aria-label="Return to The Resilient Garden home"><pre class="ascii-home-logo" aria-hidden="true">    *         …
+   \|/   @   -Y-   (O)    @@@
+   \|/  \|/ \\|// \\|//   \|/</pre></a>
   <nav class="header-nav" aria-label="Main">
     <a href="../dictionary.html" class="ascii-nav-link"><pre class="ascii-nav-art" aria-hidden="true"><span class="ascii-nav-mark"> @</span>
 <span class="ascii-nav-mark">\|/</span>  Dictionary  <span class="ascii-nav-mark">\|/</span></pre><span class="visually-hidden">Dictionary</span></a>
@@ -19,32 +22,49 @@
   </nav>
 </header>
 
-<main>
-  <p class="breadcrumb"><a href="../index.html#active-experiments">← Active Experiments</a></p>
-  <h1>Bed 02 — Kindle Ghosting</h1>
+<main class="bed-02-page">
+  <p class="breadcrumb"><a href="../index.html#garden-beds-index">← Garden Beds</a></p>
+  <h1 id="bed-02-page-title">SCREEN TRACES</h1>
 
-  <dl class="bed-meta">
-    <div class="meta-row"><dt>Bed</dt><dd>02</dd></div>
-    <div class="meta-row"><dt>Status</dt><dd>Growing</dd></div>
-    <div class="meta-row"><dt>Date planted</dt><dd>2026-07-30</dd></div>
-    <div class="meta-row"><dt>Last tended</dt><dd>2026-07-30</dd></div>
-    <div class="meta-row"><dt>Materials or tools</dt><dd>E-ink Kindle display, disabled/partial refresh, screen captures</dd></div>
-    <div class="meta-row"><dt>Related field notes</dt><dd><a href="../field-notes/note-01.html">Previous Images Remain</a></dd></div>
-    <div class="meta-row"><dt>Output</dt><dd><span class="provisional">none yet</span></dd></div>
-  </dl>
+  <p class="screen-traces-meta">BED 02 ✦ STATUS Growing ✦ DATE PLANTED 05.05.26 ✦ LAST TENDED 09.08.26</p>
 
-  <section>
-    <h2>Description</h2>
-    <p class="provisional-note">[provisional — drawn from the project brief, not yet a tested method]</p>
-    <p>This bed investigates e-ink latency, disabled or partial refresh, image persistence, and the traces a previous image leaves behind on a slow, refresh-averse display. The throughline is what a display designed to resist change ends up keeping and revealing.</p>
-  </section>
+  <h3>METHODS</h3>
+  <p>E-ink display testing, frame-by-frame image sequencing, page refresh, ghosting, screen observation and photography</p>
 
-  <section>
-    <h2>Process notes</h2>
-    <p class="provisional-note">[provisional — no confirmed results yet]</p>
-    <p>No experiments have been run yet. The first observation logged against this bed is <a href="../field-notes/note-01.html">Field Note 01 — Previous Images Remain</a>.</p>
-  </section>
+  <h3>GROWN HERE</h3>
+  <p>A frame-by-frame image sequence for an old Kindle<br>Observations of ghosting, flashing, and delay</p>
+
+  <h3 class="screen-traces-description-heading">DESCRIPTION</h3>
+  <p>This bed follows what an image leaves behind on an old Kindle screen. A sequence of 1-bit images was loaded onto the device and advanced one frame at a time. Instead of changing immediately, the display paused, flashed, and sometimes held faint parts of the previous image.</p>
+  <p>These traces are usually treated as faults to be removed. Here, they become part of the image. The experiment looks at how the Kindle’s slow refresh changes movement, how one frame remains inside the next, and how the timing of a screen can shape the way an image is read.</p>
+  <p>The photographs document different moments in the sequence, including page-turn flashes and fragments of earlier frames that remain visible.</p>
+
+  <figure class="field-note-figure field-note-video-figure screen-traces-figure">
+    <button type="button" class="field-note-video-trigger" aria-label="Play video">
+      <img src="../assets/image/exp_kindle.webp" alt="Kindle screen experiment" loading="lazy" decoding="async">
+      <span class="field-note-video-play" aria-hidden="true">[ PLAY ]</span>
+    </button>
+    <video class="field-note-video" controls playsinline preload="metadata" hidden>
+      <source src="../assets/video/exp_kindle.mp4" type="video/mp4">
+    </video>
+    <figcaption class="field-note-caption">I drew the animation frame by frame in code, then tested it through page turns on the Kindle’s E‑ink screen. Each new frame caused the screen to briefly flash, making the display’s refresh process part of the animation.</figcaption>
+  </figure>
+
+  <h3 class="screen-traces-experiments-heading">EXPERIMENTS IN THIS BED</h3>
+  <div class="screen-traces-experiment">
+    <p class="screen-traces-experiment-label">01 → OPENING THE KINDLE</p>
+    <p>I tested ways of opening locally stored images on an old Kindle, including an attempt to use KOReader. This was the first step towards treating the device as a small display for my own image sequences.</p>
+  </div>
+  <div class="screen-traces-experiment">
+    <p class="screen-traces-experiment-label">02 → FRAME BY FRAME</p>
+    <p>A short image sequence was exported as individual 1-bit frames and viewed one page at a time. The Kindle slowed the movement down, turning the sequence into a series of pauses and transitions.</p>
+  </div>
+  <div class="screen-traces-experiment">
+    <p class="screen-traces-experiment-label">03 → GHOSTING</p>
+    <p>During page turns, parts of the previous frame sometimes remained on the screen. These temporary overlaps produced images that were not contained in the original files but appeared through the behaviour of the display itself.</p>
+  </div>
 </main>
 
+<script src="../assets/js/field-note-video.js" defer></script>
 </body>
 </html>

@@ -33,6 +33,15 @@ window.ContentPanel = (function () {
       window.ImageReveal.reset(panel);
     }
 
+    // Same reasoning for any playing video (assets/js/field-note-video.js,
+    // first reused inside a panel -- not just standalone Field Note
+    // pages -- by Screen Traces): without this, closing the panel mid-
+    // playback would leave the video running, hidden, behind a closed
+    // dialog rather than back at its poster.
+    if (window.FieldNoteVideo) {
+      window.FieldNoteVideo.reset(panel);
+    }
+
     if (panel.open) {
       panel.close();
     }
@@ -116,6 +125,9 @@ window.ContentPanel = (function () {
       // reveal behind.
       if (window.ImageReveal) {
         window.ImageReveal.reset(dialog);
+      }
+      if (window.FieldNoteVideo) {
+        window.FieldNoteVideo.reset(dialog);
       }
       if (activeContentPanel === dialog) {
         activeContentPanel = null;

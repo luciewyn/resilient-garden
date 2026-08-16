@@ -951,6 +951,12 @@ body.intro-active:not(:has(#garden-map:target)) .map-index {
 .ascii-map-stage.is-dragging .digital-garden-map-trigger,
 .ascii-map-frame.is-dragging .image-reduction-hit,
 .ascii-map-stage.is-dragging .image-reduction-hit,
+.ascii-map-frame.is-dragging .screen-traces-hit,
+.ascii-map-stage.is-dragging .screen-traces-hit,
+.ascii-map-frame.is-dragging .infrastructure-hit,
+.ascii-map-stage.is-dragging .infrastructure-hit,
+.ascii-map-frame.is-dragging .compost-hit,
+.ascii-map-stage.is-dragging .compost-hit,
 .ascii-map-frame.is-dragging .pressed-edition-map-trigger,
 .ascii-map-stage.is-dragging .pressed-edition-map-trigger,
 .ascii-map-frame.is-dragging .shade-cell,
@@ -1028,6 +1034,9 @@ body.intro-active:not(:has(#garden-map:target)) .map-index {
 .screen-materiality-map-trigger,
 .digital-garden-map-trigger,
 .image-reduction-hit,
+.screen-traces-hit,
+.infrastructure-hit,
+.compost-hit,
 .pressed-edition-map-trigger {
   cursor:
     url("../cursors/ascii-bee-orange-clear.png") 38 23,
@@ -1208,6 +1217,9 @@ body.map-scale-ready .ascii-map-stage {
 .screen-materiality-map-trigger,
 .digital-garden-map-trigger,
 .image-reduction-map-trigger,
+.screen-traces-map-trigger,
+.infrastructure-map-trigger,
+.compost-map-trigger,
 .pressed-edition-map-trigger {
   z-index: var(--z-map-destinations);
 }
@@ -1396,6 +1408,118 @@ body.map-scale-ready .ascii-map-stage {
 }
 
 .image-reduction-map-trigger:focus-visible .image-reduction-hit {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+/* Screen Traces trigger (Garden Bed 02): same one-box compound-anchor
+   pattern as Image Reduction (Garden Bed 01) directly above -- the
+   whole drawn object is clickable, not just the "[ GARDEN BED 02 ]"
+   label.
+
+   Coordinates measured the same way: the box's top border sits on row
+   108, its bottom border on row 116 (9 rows total), both borders run
+   from column 85 to column 106 inclusive (22ch) -- confirmed directly
+   against the generated map text, with plain ░ background immediately
+   above (row 107) and below (row 117), same as Bed 01's box. */
+.screen-traces-map-trigger {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.screen-traces-hit {
+  position: absolute;
+  display: block;
+  pointer-events: auto;
+  background: transparent;
+  -webkit-user-drag: none;
+  left: 85ch;
+  top: 108em;
+  width: 22ch;
+  height: 9em;
+}
+
+.screen-traces-map-trigger:focus-visible .screen-traces-hit {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+/* Infrastructure trigger (Garden Bed 03): same one-box compound-anchor
+   pattern as Image Reduction and Screen Traces directly above -- the
+   whole drawn object is clickable, not just the "[ GARDEN BED 03 ]"
+   label.
+
+   Coordinates measured the same way: the box's top border sits on row
+   119, its bottom border on row 127 (9 rows total), both borders run
+   from column 143 to column 164 inclusive (22ch) -- confirmed directly
+   against the generated map text, with plain ░ background immediately
+   above (row 118) and below (row 128) across that same column range,
+   same as Beds 01/02's boxes. */
+.infrastructure-map-trigger {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.infrastructure-hit {
+  position: absolute;
+  display: block;
+  pointer-events: auto;
+  background: transparent;
+  -webkit-user-drag: none;
+  left: 143ch;
+  top: 119em;
+  width: 22ch;
+  height: 9em;
+}
+
+.infrastructure-map-trigger:focus-visible .infrastructure-hit {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+/* Compost trigger: same one-box compound-anchor pattern as the Garden
+   Beds above, sized to cover the WHOLE hand-drawn object -- the small
+   sprout/mushroom mark growing out of a "^^^^^" mound, the
+   "[ COMPOST ]" label on that same mound line, and the two lines of
+   description text below it -- not just the label text alone.
+
+   Unlike the Garden Beds' drawn +====+ boxes, this object has no
+   literal border to measure against: its rows are different widths
+   (the sprout mark is narrower and further right; the mound/label and
+   description lines are wider and start further left), so the hotspot
+   is the smallest rectangle that contains all of it. Measured directly
+   against the generated map text: content spans rows 82 (top of the
+   sprout mark) through 91 (last description line, "as material for
+   new growth"), and columns 123 through 149 inclusive (the widest
+   points being the mound/label line's "^" at 123 and "]" at 149) --
+   confirmed blank (░) immediately above (row 81) and below (row 92)
+   across that same column range. A separate, unrelated mark sits
+   further up (rows 71-73) with a multi-row ░ gap before row 82, so
+   it's deliberately excluded from this hotspot. */
+.compost-map-trigger {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.compost-hit {
+  position: absolute;
+  display: block;
+  pointer-events: auto;
+  background: transparent;
+  -webkit-user-drag: none;
+  left: 123ch;
+  top: 82em;
+  width: 27ch;
+  height: 10em;
+}
+
+.compost-map-trigger:focus-visible .compost-hit {
   outline: 1px dashed var(--fg);
   outline-offset: 1px;
 }
@@ -3129,6 +3253,173 @@ html.dialog-open body {
 }
 
 .image-reduction-related-list time {
+  color: var(--muted);
+}
+
+/* Screen Traces (Garden Bed 02): same panel architecture as Image
+   Reduction directly above -- same width, title/heading/meta
+   treatment, and dashed-separator technique -- just with its own class
+   names (this codebase keeps per-dialog classes distinct even where
+   the rules are byte-identical, e.g. .permacomputing-figure vs
+   .permapublishing-figure). Two dashed separators here, not one: this
+   bed's own hierarchy marks both DESCRIPTION and EXPERIMENTS IN THIS
+   BED as major divisions (no RELATED FIELD NOTES section to reuse the
+   second rule for, the way Bed 01 does). */
+#screen-traces-dialog.map-content-dialog[open] {
+  width: min(94vw, 960px);
+}
+
+#screen-traces-dialog-title,
+#bed-02-page-title {
+  font-family: "jgs5", monospace;
+}
+
+.screen-traces-dialog-body h3,
+.bed-02-page h3 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.screen-traces-meta {
+  margin: 0.25rem 0 1.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.screen-traces-description-heading,
+.screen-traces-experiments-heading {
+  padding-top: 1.25rem;
+  border-top: 1px dashed currentColor;
+}
+
+.screen-traces-experiment {
+  margin-top: 1.25rem;
+}
+
+.screen-traces-experiment-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+}
+
+/* Infrastructure (Garden Bed 03): same panel architecture as Image
+   Reduction and Screen Traces directly above -- own class names, same
+   rules. Two dashed separators, same reasoning as Screen Traces (no
+   RELATED FIELD NOTES section here either). */
+#infrastructure-dialog.map-content-dialog[open] {
+  width: min(94vw, 960px);
+}
+
+#infrastructure-dialog-title,
+#bed-03-page-title {
+  font-family: "jgs5", monospace;
+}
+
+.infrastructure-dialog-body h3,
+.bed-03-page h3 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.infrastructure-meta {
+  margin: 0.25rem 0 1.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.infrastructure-description-heading,
+.infrastructure-experiments-heading {
+  padding-top: 1.25rem;
+  border-top: 1px dashed currentColor;
+}
+
+.infrastructure-experiment {
+  margin-top: 1.25rem;
+}
+
+.infrastructure-experiment-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+}
+
+.infrastructure-figure {
+  margin: 1rem 0 1.5rem;
+}
+
+.infrastructure-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.infrastructure-caption {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  font-style: normal;
+  color: var(--muted);
+}
+
+/* Compost: same panel architecture as the Garden Beds above -- own
+   class names, same rules. #compost-page-title has no real standalone
+   page behind it yet (compost.html doesn't exist, matching Seed/Soil/
+   Energy's own root-level topic pages, none of which exist either --
+   see assets/js/compost-dialog.js) -- paired here anyway, matching
+   #permacomputing-dialog-title/#permacomputing-page-title's existing
+   precedent for the same not-yet-built situation. Two dashed
+   separators (DESCRIPTION, RETURNING THE DEVICE), same reasoning as
+   Screen Traces/Infrastructure. */
+#compost-dialog-title,
+#compost-page-title {
+  font-family: "jgs5", monospace;
+}
+
+.compost-dialog-body h3,
+.compost-page h3 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.compost-intro {
+  margin: 0.25rem 0 1.5rem;
+}
+
+.compost-description-heading,
+.compost-returning-heading {
+  padding-top: 1.25rem;
+  border-top: 1px dashed currentColor;
+}
+
+.compost-entry {
+  margin-top: 1.25rem;
+}
+
+.compost-entry-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+}
+
+.compost-figure {
+  margin: 1rem 0 1.5rem;
+}
+
+.compost-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.compost-caption {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  font-style: normal;
   color: var(--muted);
 }
 
